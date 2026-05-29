@@ -195,7 +195,7 @@ function GlassCluster({
             position: 'absolute',
             inset: 0,
             borderRadius: 999,
-            background: hovered ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
             transition: 'background 140ms ease',
             pointerEvents: 'none',
           }}
@@ -334,7 +334,7 @@ function GlassButton({
                 transform: 'translate(-50%, -50%)',
                 borderRadius: Math.min(width, height) / 2,
               }),
-          background: showHover ? 'rgba(255,255,255,0.12)' : 'transparent',
+          background: showHover ? 'rgba(255,255,255,0.08)' : 'transparent',
           transition: 'background 140ms ease',
           pointerEvents: 'none',
         }}

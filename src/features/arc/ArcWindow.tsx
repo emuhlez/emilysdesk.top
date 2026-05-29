@@ -1153,7 +1153,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
 function TabCloseButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
   return (
     <div
-      className="ml-auto flex shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/tab:opacity-100 hover:bg-white/10"
+      className="ml-auto flex shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/tab:opacity-100 hover:bg-white/[0.08]"
       style={{ width: 20, height: 20 }}
       onClick={onClick}
     >
@@ -1199,9 +1199,14 @@ function Sidebar({
 }) {
   return (
     <div className="relative flex h-full shrink-0 flex-col gap-3 pb-3 pl-2.5 pr-0 pt-2.5" style={{ width }}>
-      {/* Title bar – traffic lights + sidebar toggle, aligned with first tile */}
+      {/* Title bar – traffic lights + sidebar toggle, aligned with first tile.
+       *  Title bar's `pl-2.5` (10px) plus the column's `pl-2.5` (10px) puts
+       *  the traffic lights at 20px from the window's outer edge, matching
+       *  Photos `TRAFFIC_LEFT_INSET` and macOS canonical positioning. The
+       *  rest of the sidebar (pinned tabs, tab list, footer) keeps the
+       *  column-level 10px so it doesn't shift along with the title bar. */}
       <div
-        className="flex shrink-0 items-center gap-3 px-1"
+        className="flex shrink-0 items-center gap-3 pl-2.5 pr-1"
         style={{ height: 36, cursor: 'default', touchAction: 'none' }}
         onPointerDown={onDragStart}
       >

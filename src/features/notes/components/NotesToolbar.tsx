@@ -106,7 +106,7 @@ export function NotesToolbar({
 
   return (
     <div
-      className="flex shrink-0 items-center px-4"
+      className="flex shrink-0 items-center pl-5 pr-4"
       style={{
         height: 50,
         cursor: 'default',
@@ -116,6 +116,9 @@ export function NotesToolbar({
       }}
       onPointerDown={onDragStart}
     >
+      {/* 20px traffic-light left inset matches the macOS canonical position
+       *  used by `PhotosSidebarHeader.tsx:21` (TRAFFIC_LEFT_INSET). Right
+       *  side stays at 16px because no chrome element pins to it. */}
       <TrafficLights onClose={onClose} onMinimize={onMinimize} onFullscreen={onFullscreen} />
       {/* Sidebar toggle */}
       <div

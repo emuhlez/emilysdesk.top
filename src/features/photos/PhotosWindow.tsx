@@ -11,7 +11,12 @@ import { PhotosToolbar } from './components/PhotosToolbar'
 import { PhotosGrid } from './components/PhotosGrid'
 import { LiquidGlassDefs } from './components/LiquidGlassDefs'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
-import { MENU_BAR_H, DOCK_H, HANDLE } from '../../constants/window-chrome'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+} from '../../constants/window-chrome'
 
 const TOOLBAR_H = 64
 
@@ -126,10 +131,19 @@ export function PhotosWindow({
   const [rect, setRect] = useState<Rect>(() => {
     const vw = window.innerWidth
     const vh = window.innerHeight
-    const w = Math.min(960, vw - 40)
-    const h = Math.min(640, vh - MENU_BAR_H - DOCK_H - 40)
-    const x = Math.round((vw - w) / 2)
-    const y = MENU_BAR_H + Math.round((vh - MENU_BAR_H - DOCK_H - h) / 2)
+    // Mobile branch matches Notes/Arc: go full-bleed below MOBILE_BREAKPOINT
+    // so the grid + sidebar layout doesn't try to render at sub-560px
+    // viewport widths where it can't fit. MIN_W still enforces 560 once
+    // the user actively resizes via the corner handles, but the *initial*
+    // rect should be representative of the viewport — same contract used
+    // by NotesWindow.tsx:119-130 and ArcWindow.tsx initial-rect factory.
+    const isMobile = vw < MOBILE_BREAKPOINT
+    const w = isMobile ? vw : Math.min(960, vw - 40)
+    const h = isMobile
+      ? vh - MENU_BAR_H - DOCK_H
+      : Math.min(640, vh - MENU_BAR_H - DOCK_H - 40)
+    const x = isMobile ? 0 : Math.round((vw - w) / 2)
+    const y = MENU_BAR_H + (isMobile ? 0 : Math.round((vh - MENU_BAR_H - DOCK_H - h) / 2))
     return { x, y, w, h }
   })
 
