@@ -4,7 +4,7 @@ import { TrafficLights } from '../../components/TrafficLights'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
-import { WINDOW_SHADOW } from '../../styles/window-shadow'
+import { WINDOW_DROP_SHADOW } from '../../styles/window-shadow'
 import { FONT_STACK } from '../../styles/typography'
 import {
   MENU_BAR_H,
@@ -1576,20 +1576,27 @@ export function ArcWindow({
       }}
       onPointerDown={onFocus}
     >
-      {/* Window chrome — unified with Notes/Photos per the design audit:
-       *  borderRadius 24, opaque #1E1E1E base, WINDOW_SHADOW outer shadow,
-       *  and a 1px @ 0.22 inner-rim overlay div (rendered below). The
-       *  previous translucent/tinted recipe (rgba(4,6,24,0.5) + 32.5px
-       *  backdrop-blur + 0.5px @ 0.12 inline rim) is gone — Arc no longer
-       *  reads as glass over the wallpaper. `relative` is needed so the
-       *  rim overlay below positions inside this div. */}
+      {/* Window chrome — Arc intentionally diverges from Notes/Photos'
+       *  unified opaque surface. The translucent/tinted glass recipe
+       *  (rgba(4,6,24,0.5) + 32.5px backdrop-blur, 18px radius, 0.5px
+       *  @ 0.12 inline rim on top of WINDOW_DROP_SHADOW) is core to
+       *  Arc's identity as a browser window — the wallpaper bleed
+       *  through the chrome reads as "this app is its own surface
+       *  tier" in a way that opaque #1E1E1E does not. The first pass
+       *  of design audit Slice 3 unified Arc into the Notes/Photos
+       *  system; that change was reverted here. Notes and Photos keep
+       *  the opaque #1E1E1E + WINDOW_SHADOW + 1px@0.22 rim recipe. */}
       <div
         ref={windowRef}
-        className="relative flex h-full w-full overflow-hidden"
+        className="flex h-full w-full overflow-hidden"
         style={{
-          borderRadius: fullscreen ? 0 : 24,
-          background: '#1E1E1E',
-          boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
+          borderRadius: fullscreen ? 0 : 18,
+          background: 'rgba(4, 6, 24, 0.5)',
+          backdropFilter: 'blur(32.5px)',
+          WebkitBackdropFilter: 'blur(32.5px)',
+          boxShadow: fullscreen
+            ? 'inset 0 0 0 0.5px rgba(255, 255, 255, 0.12)'
+            : `${WINDOW_DROP_SHADOW}, inset 0 0 0 0.5px rgba(255, 255, 255, 0.12)`,
         }}
       >
         <div
@@ -1691,19 +1698,6 @@ export function ArcWindow({
             </div>
           </div>
         </div>
-
-        {/* Inner chrome rim overlay — matches the Notes/Photos system.
-         *  1px @ 0.22 on the dark #1E1E1E fill reads as a soft chrome
-         *  edge against the wallpaper, with WINDOW_SHADOW handling the
-         *  outer drop. pointer-events-none so it doesn't steal clicks
-         *  from the sidebar/content children behind it. */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            borderRadius: fullscreen ? 0 : 24,
-            boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.22)',
-          }}
-        />
       </div>
 
       {/* Search dialog */}
