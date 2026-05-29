@@ -595,12 +595,12 @@ function FolderOpenIcon() {
   )
 }
 
-function GlobeIcon() {
+function GlobeIcon({ opacity = 0.4 }: { opacity?: number }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" style={{ minWidth: 16, minHeight: 16 }}>
-      <circle cx="8" cy="8" r="6" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
-      <ellipse cx="8" cy="8" rx="3" ry="6" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
-      <line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
+      <circle cx="8" cy="8" r="6" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
+      <ellipse cx="8" cy="8" rx="3" ry="6" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
+      <line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
     </svg>
   )
 }
@@ -956,27 +956,44 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
     setTimeout(() => inputRef.current?.select(), 0)
   }, [])
 
-  const q = query.toLowerCase()
-  const filtered = q
-    ? SAVED_LINKS.filter(l => l.label.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
+  // Unified, typed list of dropdown rows. Order mirrors the design and
+  // matches Arc/Chrome omniboxes: direct "go to <url>" first when the query
+  // is URL-shaped, then "search the web for <query>", then bookmark matches.
+  // selectedIdx indexes into this single list so the keyboard handler can
+  // dispatch by item.kind without ever re-classifying the raw query.
+  type Item =
+    | { kind: 'goto'; url: string }
+    | { kind: 'search'; query: string }
+    | { kind: 'bookmark'; link: typeof SAVED_LINKS[number] }
+
+  const trimmedQuery = query.trim()
+  const lowerQuery = trimmedQuery.toLowerCase()
+  const isUrlShape =
+    trimmedQuery.length > 0 &&
+    (/^https?:\/\//i.test(trimmedQuery) || /^[^\s]+\.[^\s]+$/.test(trimmedQuery))
+
+  const matchedBookmarks = trimmedQuery
+    ? SAVED_LINKS.filter(
+        l => l.label.toLowerCase().includes(lowerQuery) || l.url.toLowerCase().includes(lowerQuery),
+      )
     : SAVED_LINKS
 
-  const showGoogleOption = q.length > 0
-
-  const totalItems = filtered.length + (showGoogleOption ? 1 : 0)
+  const items: Item[] = []
+  if (isUrlShape) items.push({ kind: 'goto', url: trimmedQuery })
+  if (trimmedQuery.length > 0) items.push({ kind: 'search', query: trimmedQuery })
+  for (const link of matchedBookmarks) items.push({ kind: 'bookmark', link })
 
   const commit = useCallback((targetUrl?: string) => {
     const finalTarget = targetUrl || query.trim()
     if (!finalTarget) { onClose(); return }
     const u = finalTarget
     if (/^https?:\/\//i.test(u)) {
-      // Already a full URL
       onNavigate(u)
     } else if (/^[^\s]+\.[^\s]+$/.test(u)) {
-      // Looks like a domain (e.g. "google.com", "foo.bar/path")
+      // Bare domain — assume https. Mirrors the regex used to populate the
+      // 'goto' row above, so the row's behavior matches what you see.
       onNavigate('https://' + u)
     } else {
-      // Treat as a search query
       onNavigate(`https://www.google.com/search?q=${encodeURIComponent(u)}`)
     }
   }, [query, onNavigate, onClose])
@@ -984,22 +1001,28 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIdx(i => Math.min(i + 1, totalItems - 1))
+      setSelectedIdx(i => Math.min(i + 1, items.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIdx(i => Math.max(i - 1, 0))
     } else if (e.key === 'Enter') {
-      if (selectedIdx < filtered.length) {
-        commit(filtered[selectedIdx].url)
-      } else if (showGoogleOption) {
-        commit(`https://www.google.com/search?q=${encodeURIComponent(query)}`)
-      } else {
-        commit()
+      const item = items[selectedIdx]
+      if (!item) { commit(); return }
+      switch (item.kind) {
+        case 'goto':
+          commit(item.url)
+          return
+        case 'search':
+          commit(`https://www.google.com/search?q=${encodeURIComponent(item.query)}`)
+          return
+        case 'bookmark':
+          commit(item.link.url)
+          return
       }
     } else if (e.key === 'Escape') {
       onClose()
     }
-  }, [selectedIdx, filtered, showGoogleOption, query, commit, onClose, totalItems])
+  }, [items, selectedIdx, commit, onClose])
 
   return (
     <div
@@ -1038,70 +1061,85 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
         <div style={{ height: 0.5, margin: '0 12px', background: 'rgba(255,255,255,0.08)' }} />
 
         {/* Results */}
-        <div className="flex max-h-[200px] flex-col gap-2 overflow-y-auto px-3 py-2.5">
-          {filtered.map((link, i) => (
-            <div
-              key={link.url}
-              className="flex items-center gap-2.5 rounded-lg px-3"
-              style={{
-                height: 32,
-                background: i === selectedIdx ? 'rgba(255,255,255,0.1)' : undefined,
-                cursor: 'default',
-              }}
-              onMouseEnter={() => setSelectedIdx(i)}
-              onClick={() => commit(link.url)}
-            >
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`}
-                width={16}
-                height={16}
-                className="shrink-0 rounded-sm"
-                alt=""
-              />
-              <span
-                className="truncate text-[12px] font-semibold text-white/80"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
+        <div className="flex max-h-[260px] flex-col gap-1 overflow-y-auto px-3 py-2.5">
+          {items.map((item, i) => {
+            const selected = i === selectedIdx
+            const rowStyle: React.CSSProperties = {
+              height: 40,
+              background: selected ? '#5046E5' : undefined,
+              cursor: 'default',
+            }
+            const labelClass = 'truncate text-[13.5px] font-semibold'
+            const labelStyle: React.CSSProperties = {
+              color: selected ? '#fff' : 'rgba(255,255,255,0.85)',
+              fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+            }
+
+            if (item.kind === 'goto') {
+              return (
+                <div
+                  key={`goto-${i}`}
+                  className="flex items-center gap-2.5 rounded-lg px-3"
+                  style={rowStyle}
+                  onMouseEnter={() => setSelectedIdx(i)}
+                  onClick={() => commit(item.url)}
+                >
+                  <GlobeIcon opacity={selected ? 1 : 0.55} />
+                  <span className={labelClass} style={labelStyle}>{item.url}</span>
+                </div>
+              )
+            }
+
+            if (item.kind === 'search') {
+              const iconStroke = selected ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)'
+              return (
+                <div
+                  key={`search-${i}`}
+                  className="flex items-center gap-2.5 rounded-lg px-3"
+                  style={rowStyle}
+                  onMouseEnter={() => setSelectedIdx(i)}
+                  onClick={() => commit(`https://www.google.com/search?q=${encodeURIComponent(item.query)}`)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                    <circle cx="7" cy="7" r="5.5" stroke={iconStroke} strokeWidth="1.4" />
+                    <path d="M11 11L14.5 14.5" stroke={iconStroke} strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  <span className={labelClass} style={labelStyle}>{item.query}</span>
+                </div>
+              )
+            }
+
+            const link = item.link
+            const subColor = selected ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)'
+            return (
+              <div
+                key={`bookmark-${link.url}`}
+                className="flex items-center gap-2.5 rounded-lg px-3"
+                style={rowStyle}
+                onMouseEnter={() => setSelectedIdx(i)}
+                onClick={() => commit(link.url)}
               >
-                {link.label}
-              </span>
-              <span className="text-[12px] text-white/20">—</span>
-              <span
-                className="truncate text-[12px] text-white/20"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
-              >
-                {link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-              </span>
-            </div>
-          ))}
-          {showGoogleOption && (
-            <div
-              className="flex items-center gap-2.5 rounded-lg px-3"
-              style={{
-                height: 32,
-                background: selectedIdx === filtered.length ? 'rgba(255,255,255,0.1)' : undefined,
-                cursor: 'default',
-              }}
-              onMouseEnter={() => setSelectedIdx(filtered.length)}
-              onClick={() => commit(`https://www.google.com/search?q=${encodeURIComponent(query)}`)}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
-                <path d="M11 11L14.5 14.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              <span
-                className="truncate text-[12px] font-semibold text-white/80"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
-              >
-                Search Google for "{query}"
-              </span>
-            </div>
-          )}
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`}
+                  width={16}
+                  height={16}
+                  className="shrink-0 rounded-sm"
+                  alt=""
+                />
+                <span className={labelClass} style={labelStyle}>{link.label}</span>
+                <span className="text-[13.5px]" style={{ color: subColor }}>—</span>
+                <span
+                  className="truncate text-[13.5px]"
+                  style={{
+                    color: subColor,
+                    fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                  }}
+                >
+                  {link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
