@@ -4,7 +4,7 @@ import { TrafficLights } from '../../components/TrafficLights'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
-import { WINDOW_DROP_SHADOW } from '../../styles/window-shadow'
+import { WINDOW_SHADOW } from '../../styles/window-shadow'
 import { FONT_STACK } from '../../styles/typography'
 import {
   MENU_BAR_H,
@@ -12,6 +12,16 @@ import {
   HANDLE,
   MOBILE_BREAKPOINT,
 } from '../../constants/window-chrome'
+
+/**
+ * Arc accent — indigo, used as the SearchDialog selected-row background.
+ * Intentionally distinct from Notes (gold) and Photos (macOS blue) per
+ * design audit Slice 3 — each app carries its own accent identity.
+ * The bookmark color palette in `SAVED_LINKS` below is a separate,
+ * data-driven brand-color list (LinkedIn, GitHub, etc.) — those aren't
+ * the Arc app accent and shouldn't be unified with this value.
+ */
+const ARC_ACCENT = '#5046E5'
 
 /* ─── helpers ─── */
 
@@ -1070,7 +1080,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
             const selected = i === selectedIdx
             const rowStyle: React.CSSProperties = {
               height: 40,
-              background: selected ? '#5046E5' : undefined,
+              background: selected ? ARC_ACCENT : undefined,
               cursor: 'default',
             }
             const labelClass = 'truncate text-[13px] font-semibold'
@@ -1566,18 +1576,20 @@ export function ArcWindow({
       }}
       onPointerDown={onFocus}
     >
-      {/* Window chrome */}
+      {/* Window chrome — unified with Notes/Photos per the design audit:
+       *  borderRadius 24, opaque #1E1E1E base, WINDOW_SHADOW outer shadow,
+       *  and a 1px @ 0.22 inner-rim overlay div (rendered below). The
+       *  previous translucent/tinted recipe (rgba(4,6,24,0.5) + 32.5px
+       *  backdrop-blur + 0.5px @ 0.12 inline rim) is gone — Arc no longer
+       *  reads as glass over the wallpaper. `relative` is needed so the
+       *  rim overlay below positions inside this div. */}
       <div
         ref={windowRef}
-        className="flex h-full w-full overflow-hidden"
+        className="relative flex h-full w-full overflow-hidden"
         style={{
-          borderRadius: fullscreen ? 0 : 18,
-          background: 'rgba(4, 6, 24, 0.5)',
-          backdropFilter: 'blur(32.5px)',
-          WebkitBackdropFilter: 'blur(32.5px)',
-          boxShadow: fullscreen
-            ? 'inset 0 0 0 0.5px rgba(255, 255, 255, 0.12)'
-            : `${WINDOW_DROP_SHADOW}, inset 0 0 0 0.5px rgba(255, 255, 255, 0.12)`,
+          borderRadius: fullscreen ? 0 : 24,
+          background: '#1E1E1E',
+          boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
         }}
       >
         <div
@@ -1679,6 +1691,19 @@ export function ArcWindow({
             </div>
           </div>
         </div>
+
+        {/* Inner chrome rim overlay — matches the Notes/Photos system.
+         *  1px @ 0.22 on the dark #1E1E1E fill reads as a soft chrome
+         *  edge against the wallpaper, with WINDOW_SHADOW handling the
+         *  outer drop. pointer-events-none so it doesn't steal clicks
+         *  from the sidebar/content children behind it. */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            borderRadius: fullscreen ? 0 : 24,
+            boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.22)',
+          }}
+        />
       </div>
 
       {/* Search dialog */}

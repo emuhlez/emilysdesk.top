@@ -22,6 +22,17 @@ import { FONT_STACK, DISPLAY_FONT_STACK } from '../../../styles/typography'
  * a deliberate ~½-second pinch traverses ~1 full discrete stop. */
 const PINCH_DELTA_PER_UNIT = 250
 
+/**
+ * Photos accent — macOS system blue, used as the selected-photo outline
+ * and (via `rgba(10, 132, 255, ...)` variants in PhotosSidebar.tsx) the
+ * active sidebar row gradient. Intentionally distinct from Notes (gold)
+ * and Arc (indigo) per design audit Slice 3 — each app carries its own
+ * accent identity. The RGB tuple `10, 132, 255` is the source of truth;
+ * `#0A84FF` is the hex form used here for solid fills. Don't introduce
+ * other "blue-ish" hexes as Photos selection.
+ */
+const PHOTOS_ACCENT = '#0A84FF'
+
 /* Row-height stops for zoom 1..5 (px). Zoom 1 is the square "contact sheet"
  * (smaller because the appeal is density). Zooms 2..5 grow moderately —
  * the dramatic visual change between zoom stops is *density* (see
@@ -160,7 +171,7 @@ function PhotoTile({
         minWidth: 0,
         cursor: 'default',
         borderRadius: square ? 0 : 3,
-        outline: isSelected ? '2.5px solid #0A84FF' : 'none',
+        outline: isSelected ? `2.5px solid ${PHOTOS_ACCENT}` : 'none',
         outlineOffset: square ? 0 : -2,
         ...style,
       }}

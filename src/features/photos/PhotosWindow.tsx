@@ -322,8 +322,16 @@ export function PhotosWindow({
         className="relative flex h-full w-full min-h-0 flex-col overflow-hidden"
         style={{
           borderRadius: fullscreen ? 0 : 24,
-          /* Option A: subtle translucency so sidebar backdrop-filter samples real content behind the window (sim desktop wallpaper). */
-          background: fullscreen ? '#1E1E1E' : 'rgba(30, 30, 30, 0.92)',
+          /* Opaque #1E1E1E matches Notes and Arc per the unified surface
+           * system. Previously this was `rgba(30, 30, 30, 0.92)` when
+           * windowed so the sidebar's backdrop-filter could sample the
+           * wallpaper through the chrome ("Option A: subtle translucency").
+           * That created an aesthetic split between Photos and the other
+           * two windows — the unified-opaque decision keeps Photos
+           * grounded in the same surface tier. The Photos sidebar still
+           * has its own internal glass effect via backdrop-filter on its
+           * own rounded glass tile; that lift is preserved. */
+          background: '#1E1E1E',
           boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
         }}
       >
