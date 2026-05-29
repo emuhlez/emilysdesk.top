@@ -1,4 +1,5 @@
 import { usePhotosStore, type SidebarSection } from '../../../stores/photos-store'
+import { FONT_STACK } from '../../../styles/typography'
 import libraryGlyphSvg from '../../../../assets/sf-symbols/photo.on.rectangle--monochrome--medium.svg?raw'
 import collectionsGlyphSvg from '../../../../assets/sf-symbols/rectangle.stack--monochrome--medium.svg?raw'
 import favoritesGlyphSvg from '../../../../assets/sf-symbols/heart--monochrome--medium.svg?raw'
@@ -25,7 +26,7 @@ function SectionHeader({ children }: { children: string }) {
     <div className="shrink-0">
       <span
         style={{
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           fontSize: 12,
           fontWeight: 600,
           lineHeight: 'normal',
@@ -96,7 +97,7 @@ function SidebarRow({
       </div>
       <span
         style={{
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           fontSize: 12,
           fontWeight: 400,
           letterSpacing: '-0.08px',

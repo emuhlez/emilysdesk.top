@@ -1,6 +1,7 @@
 import type { CSSProperties, PropsWithChildren, ReactNode } from 'react'
 import { Children, Fragment, createContext, useContext, useState } from 'react'
 import { LayoutGroup, motion } from 'framer-motion'
+import { FONT_STACK } from '../../../styles/typography'
 import infoCircleMediumSvg from '../../../../assets/sf-symbols/info.circle--monochrome--medium.svg?raw'
 import heartMediumSvg from '../../../../assets/sf-symbols/heart--monochrome--medium.svg?raw'
 import personCropRectangleSvg from '../../../../assets/sf-symbols/person.crop.rectangle--monochrome--medium.svg?raw'
@@ -354,7 +355,7 @@ function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
     >
       <span
         style={{
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           fontSize: 13,
           fontWeight: 600,
           letterSpacing: '-0.14px',
@@ -367,7 +368,7 @@ function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
       {subtitle && (
         <span
           style={{
-            fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+            fontFamily: FONT_STACK,
             fontSize: 11,
             fontWeight: 500,
             color: 'rgba(255,255,255,0.52)',
@@ -703,7 +704,7 @@ function ViewTab({
       style={{
         cursor: 'default',
         padding: '6px 12px',
-        fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+        fontFamily: FONT_STACK,
         fontSize: 12,
         letterSpacing: '-0.08px',
         whiteSpace: 'nowrap',

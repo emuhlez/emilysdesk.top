@@ -11,6 +11,7 @@ import {
   usePhotosStore,
   type PhotoItem,
 } from '../../../stores/photos-store'
+import { FONT_STACK, DISPLAY_FONT_STACK } from '../../../styles/typography'
 
 /* Trackpad pinch gestures and Ctrl+scroll on a mouse wheel both surface as
  * `wheel` events with `event.ctrlKey === true` in Chromium/Electron. The
@@ -192,8 +193,7 @@ function PhotoTile({
           style={{
             right: 4,
             bottom: 4,
-            fontFamily:
-              '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+            fontFamily: FONT_STACK,
             fontSize: 10,
             fontWeight: 600,
             color: '#fff',
@@ -349,8 +349,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           >
             <span
               style={{
-                fontFamily:
-                  '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                fontFamily: FONT_STACK,
                 fontSize: 12,
                 fontWeight: 400,
                 color: 'rgba(255,255,255,0.35)',
@@ -421,8 +420,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
                   >
                     <h2
                       style={{
-                        fontFamily:
-                          '"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                        fontFamily: DISPLAY_FONT_STACK,
                         fontSize: 22,
                         fontWeight: 700,
                         letterSpacing: '-0.4px',
@@ -437,8 +435,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
                       <div
                         style={{
                           marginTop: 2,
-                          fontFamily:
-                            '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                          fontFamily: FONT_STACK,
                           fontSize: 12,
                           fontWeight: 500,
                           letterSpacing: 0.1,
@@ -551,8 +548,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           >
             <span
               style={{
-                fontFamily:
-                  '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                fontFamily: FONT_STACK,
                 fontSize: 11,
                 fontWeight: 500,
                 letterSpacing: 0.2,

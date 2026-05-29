@@ -11,6 +11,7 @@ import { PhotosToolbar } from './components/PhotosToolbar'
 import { PhotosGrid } from './components/PhotosGrid'
 import { LiquidGlassDefs } from './components/LiquidGlassDefs'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
+import { MENU_BAR_H, DOCK_H, HANDLE } from '../../constants/window-chrome'
 
 const TOOLBAR_H = 64
 
@@ -25,11 +26,9 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
+// Per-app floors stay local — Photos needs ~560x420 to keep grid + sidebar usable.
 const MIN_W = 560
 const MIN_H = 420
-const HANDLE = 6
 const SIDEBAR_DEFAULT = 205
 const SIDEBAR_MIN = 160
 const SIDEBAR_MAX = 360

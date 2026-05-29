@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { DISPLAY_FONT_STACK } from '../../styles/typography'
 
 /**
  * macOS-style lock screen. Visually identical to the inline splash in
@@ -186,8 +187,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
         backgroundPosition: 'center, center',
         color: '#fff',
         paddingTop: 'env(safe-area-inset-top)',
-        fontFamily:
-          '"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+        fontFamily: DISPLAY_FONT_STACK,
         opacity: exiting ? 0 : 1,
         transform: exiting && !reduceMotion ? 'scale(1.02)' : 'scale(1)',
         filter: exiting && !reduceMotion ? 'blur(8px)' : 'none',
@@ -438,7 +438,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
             y="50%"
             textAnchor="middle"
             dominantBaseline="central"
-            fontFamily='"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+            fontFamily={DISPLAY_FONT_STACK}
             fontWeight={600}
             fontSize={180}
             fill="#ffffff"

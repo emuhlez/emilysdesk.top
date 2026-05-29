@@ -5,6 +5,13 @@ import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
 import { WINDOW_DROP_SHADOW } from '../../styles/window-shadow'
+import { FONT_STACK } from '../../styles/typography'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+} from '../../constants/window-chrome'
 
 /* ─── helpers ─── */
 
@@ -85,15 +92,12 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
+// Per-app floors stay local — Arc keeps the viewport usable at 300x300.
 const MIN_W = 300
 const MIN_H = 300
-const HANDLE = 6
 const SIDEBAR_DEFAULT = 232
 const SIDEBAR_MIN = 160
 const SIDEBAR_MAX = 400
-const MOBILE_BREAKPOINT = 640
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -450,7 +454,7 @@ function TabItem({ icon, label, active = false, bold = false, onClick, onClose }
     >
       <span className="shrink-0">{icon}</span>
       <span
-        className={`truncate text-[12px] font-['SF_Pro',-apple-system,BlinkMacSystemFont,sans-serif] ${bold ? 'font-semibold' : ''}`}
+        className={`truncate text-[12px] ${bold ? 'font-semibold' : ''}`}
         style={{ color: active || hovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}
       >
         {label}
@@ -1034,7 +1038,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
         className="flex w-[min(500px,85%)] flex-col overflow-hidden rounded-xl"
         style={{
           background: 'rgba(28, 28, 30, 0.72)',
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
           boxShadow:
@@ -1048,7 +1052,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
             ref={inputRef}
             className="flex-1 bg-transparent text-[18px] font-semibold text-white/90 placeholder-white/30 outline-none"
             style={{
-              fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+              fontFamily: FONT_STACK,
             }}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setSelectedIdx(0) }}
@@ -1069,10 +1073,10 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
               background: selected ? '#5046E5' : undefined,
               cursor: 'default',
             }
-            const labelClass = 'truncate text-[13.5px] font-semibold'
+            const labelClass = 'truncate text-[13px] font-semibold'
             const labelStyle: React.CSSProperties = {
               color: selected ? '#fff' : 'rgba(255,255,255,0.85)',
-              fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+              fontFamily: FONT_STACK,
             }
 
             if (item.kind === 'goto') {
@@ -1127,12 +1131,12 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
                   alt=""
                 />
                 <span className={labelClass} style={labelStyle}>{link.label}</span>
-                <span className="text-[13.5px]" style={{ color: subColor }}>—</span>
+                <span className="text-[13px]" style={{ color: subColor }}>—</span>
                 <span
-                  className="truncate text-[13.5px]"
+                  className="truncate text-[13px]"
                   style={{
                     color: subColor,
-                    fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                    fontFamily: FONT_STACK,
                   }}
                 >
                   {link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
@@ -1694,14 +1698,19 @@ export function ArcWindow({
         />
       )}
 
-      {/* Resize handles */}
-      {ALL_DIRS.map((dir) => (
-        <div
-          key={dir}
-          style={{ ...handleStyle(dir), touchAction: 'none' }}
-          onPointerDown={(e) => startDrag(dir, e)}
-        />
-      ))}
+      {/* Resize handles — gated by !fullscreen to match Notes/Photos.
+       *  In fullscreen the window is locked at viewport bounds; live
+       *  resize handles would let the user drag the edges and resize
+       *  out of fullscreen invisibly, leaving the window in a stale
+       *  rect on the next frame. */}
+      {!fullscreen &&
+        ALL_DIRS.map((dir) => (
+          <div
+            key={dir}
+            style={{ ...handleStyle(dir), touchAction: 'none' }}
+            onPointerDown={(e) => startDrag(dir, e)}
+          />
+        ))}
     </div>
   )
 }

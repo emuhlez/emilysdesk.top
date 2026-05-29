@@ -81,7 +81,7 @@ export function NotesSidebar({
               >
                 <div className="flex items-baseline gap-2">
                   <span
-                    className="truncate text-[12px] font-semibold font-['SF_Pro',-apple-system,BlinkMacSystemFont,sans-serif]"
+                    className="truncate text-[12px] font-semibold"
                     style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.85)' }}
                   >
                     {note.title || 'Untitled'}
