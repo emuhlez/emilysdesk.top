@@ -1,7 +1,7 @@
 import type { CSSProperties, PropsWithChildren, ReactNode } from 'react'
 import { Children, Fragment, createContext, useContext, useState } from 'react'
 import { LayoutGroup, motion } from 'framer-motion'
-import { FONT_STACK } from '../../../styles/typography'
+import { FONT_STACK, WINDOW_TITLE_STYLE } from '../../../styles/typography'
 import infoCircleMediumSvg from '../../../../assets/sf-symbols/info.circle--monochrome--medium.svg?raw'
 import heartMediumSvg from '../../../../assets/sf-symbols/heart--monochrome--medium.svg?raw'
 import personCropRectangleSvg from '../../../../assets/sf-symbols/person.crop.rectangle--monochrome--medium.svg?raw'
@@ -353,16 +353,7 @@ function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
         padding: '6px 14px 6px 0',
       }}
     >
-      <span
-        style={{
-          fontFamily: FONT_STACK,
-          fontSize: 13,
-          fontWeight: 600,
-          letterSpacing: '-0.14px',
-          color: 'rgba(255,255,255,0.96)',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span style={{ ...WINDOW_TITLE_STYLE, whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {subtitle && (

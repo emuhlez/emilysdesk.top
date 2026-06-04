@@ -200,6 +200,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Also strip preload/modulepreload that would re-fetch JS bundles.
     html = html.replace(/<link[^>]*rel\s*=\s*["']?(?:modulepreload|preload)["']?[^>]*>/gi, '')
 
+    // Empty-SSR detection. Fully-client-rendered SPAs (Next.js with no
+    // getStaticProps text content, React Router-only apps, ...) ship a
+    // skeleton <body> and rely on JS hydration to fill it. After we strip
+    // scripts above, those pages have ~0 chars of visible text. Loading
+    // them in the iframe gives the user a blank rectangle and no signal
+    // about *why* — which feels like the app is broken. Return 502 with
+    // a reason code so the client can render its SitePreview fallback
+    // (favicon + label + "Open in browser") instead.
+    //
+    // Two guards keep this from false-positiving on legitimately terse
+    // pages (one-paragraph status pages, "Coming soon" splashes,
+    // server-rendered 404s, single-line status JSON wrapped in HTML):
+    //   1. An 80-char visible-text floor (real SSR'd article/doc pages
+    //      have thousands; a true empty-SSR shell has ~0).
+    //   2. AND the body must contain no semantic content tag
+    //      (<p>/<h1>/<article>/<main>). A short page that still ships
+    //      real markup isn't an un-hydrated shell, so we let it through.
+    //
+    // The <body> matcher deliberately skips over quoted attribute values
+    // (`<body data-x="a>b">`) so a `>` inside an attribute doesn't end the
+    // open tag early and mis-slice the body region.
+    const bodyMatch = html.match(/<body(?:"[^"]*"|'[^']*'|[^>])*>([\s\S]*?)<\/body>/i)
+    const bodyHtml = bodyMatch ? bodyMatch[1] : html
+    const visibleText = bodyHtml
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    const hasSemanticContent = /<(?:p|h1|article|main)\b/i.test(bodyHtml)
+    if (visibleText.length < 80 && !hasSemanticContent) {
+      return res.status(502).json({
+        error: 'No visible content after script strip',
+        reason: 'spa-no-ssr',
+        url: target.href,
+      })
+    }
+
     // Default font fallback. Crawler-fallback HTML from sites like Discourse
     // omits the inline <style> blocks that set the body font, leaving the iframe
     // rendering everything in the browser-default serif (Times New Roman). Force

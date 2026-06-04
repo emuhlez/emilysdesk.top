@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TrafficLights } from '../../components/TrafficLights'
 import { useAppStore } from '../../stores/app-store'
@@ -12,6 +12,8 @@ import {
   HANDLE,
   MOBILE_BREAKPOINT,
 } from '../../constants/window-chrome'
+import plusMediumSvg from '../../../assets/sf-symbols/plus--monochrome--medium.svg?raw'
+import trashMediumSvg from '../../../assets/sf-symbols/trash--monochrome--medium.svg?raw'
 
 /**
  * Arc accent — indigo, used as the SearchDialog selected-row background.
@@ -244,12 +246,41 @@ function toggleFolder(nodes: SidebarNode[], id: number): SidebarNode[] {
   })
 }
 
-function addTabToFolder(nodes: SidebarNode[], folderId: number, tab: TabNode): SidebarNode[] {
-  return nodes.map(n => {
-    if (n.type === 'folder' && n.id === folderId) return { ...n, children: [...n.children, tab], expanded: true }
-    if (n.type === 'folder') return { ...n, children: addTabToFolder(n.children, folderId, tab) }
-    return n
-  })
+/**
+ * Stable id for the dedicated "Other Tabs" section that the sidebar's
+ * footer plus button writes into. Lives outside the year folders so
+ * newly-added tabs don't get buried inside an existing year/topic
+ * tree. -100 is far below any id seed value used by the initial state
+ * (current floor is -8) so it can't collide.
+ */
+const NEW_LINKS_FOLDER_ID = -100
+
+/**
+ * Append a tab to the dedicated "Other Tabs" section, creating that
+ * section at the end of the root sidebar tree on first call. Lazy
+ * creation means the folder doesn't show up in the sidebar until the
+ * user has actually added at least one tab via the footer plus button,
+ * which avoids an empty "Other Tabs" header sitting under the year
+ * folders before the feature has been used. The label follows Arc's
+ * own vernacular for the un-categorized bucket rather than a generic
+ * "Links".
+ */
+function appendToNewLinksFolder(nodes: SidebarNode[], tab: TabNode): SidebarNode[] {
+  const idx = nodes.findIndex(n => n.type === 'folder' && n.id === NEW_LINKS_FOLDER_ID)
+  if (idx >= 0) {
+    const folder = nodes[idx] as FolderNode
+    const next = [...nodes]
+    next[idx] = { ...folder, children: [...folder.children, tab], expanded: true }
+    return next
+  }
+  const newFolder: FolderNode = {
+    type: 'folder',
+    id: NEW_LINKS_FOLDER_ID,
+    label: 'Other Tabs',
+    expanded: true,
+    children: [tab],
+  }
+  return [...nodes, newFolder]
 }
 
 function updateTabUrl(nodes: SidebarNode[], tabId: number, url: string): SidebarNode[] {
@@ -619,38 +650,31 @@ function GlobeIcon({ opacity = 0.4 }: { opacity?: number }) {
   )
 }
 
+/* Sidebar-footer glyphs render the canonical SF Symbols (plus / trash,
+ *  monochrome medium) from assets/sf-symbols/ to comply with the
+ *  use-sf-symbols-only project rule, replacing the previous hand-drawn
+ *  SVGs. The symbols paint with `currentColor`, so the wrapper's
+ *  `color` reproduces the prior `rgba(255,255,255,0.4)` tint, and the
+ *  14×14 box keeps the original footer sizing. */
 function PlusIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M7 0.5V13.5M0.5 7H13.5" stroke="white" strokeOpacity="0.4" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <span
+      aria-label="New tab"
+      className="inline-flex shrink-0 [&>svg]:block"
+      style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.4)' }}
+      dangerouslySetInnerHTML={{ __html: plusMediumSvg }}
+    />
   )
 }
 
-function BinWithStarsIcon() {
+function TrashIcon() {
   return (
-    <svg width="14" height="14" viewBox="67 1042 15 18" fill="none">
-      {/* Bin body */}
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M70 1050C69.4477 1050 69 1050.45 69 1051V1057C69 1058.1 69.8954 1059 71 1059H79C80.1046 1059 81 1058.1 81 1057V1051C81 1050.45 80.5523 1050 80 1050H70ZM73.5 1051C73.2239 1051 73 1051.22 73 1051.5V1052.5C73 1052.78 73.2239 1053 73.5 1053H76.5C76.7761 1053 77 1052.78 77 1052.5V1051.5C77 1051.22 76.7761 1051 76.5 1051H73.5Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-      {/* Bin lid */}
-      <path
-        d="M80.2562 1046.01L80.9573 1047.41C81.2066 1047.91 80.844 1048.5 80.2865 1048.5H78.5H75H68.5C68.2239 1048.5 68 1048.28 68 1048V1047.62C68 1047.24 68.214 1046.89 68.5528 1046.72L70.6365 1045.68C70.8681 1045.57 71.0405 1045.36 71.1117 1045.11L71.1773 1044.88C71.4137 1044.05 72.5863 1044.05 72.8227 1044.88C72.9276 1045.25 73.2634 1045.5 73.6454 1045.5H75.6529C76.1417 1045.5 76.5744 1045.85 76.578 1046.34C76.5905 1048.05 75.5805 1048.5 75 1048.5H78.5V1046.43C78.5 1045.92 78.9151 1045.5 79.4271 1045.5C79.7782 1045.5 80.0992 1045.7 80.2562 1046.01Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-      {/* Lid dot */}
-      <path
-        d="M78 1044C78 1044.55 77.5523 1045 77 1045C76.4477 1045 76 1044.55 76 1044C76 1043.45 76.4477 1043 77 1043C77.5523 1043 78 1043.45 78 1044Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-    </svg>
+    <span
+      aria-label="Trash"
+      className="inline-flex shrink-0 [&>svg]:block"
+      style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.4)' }}
+      dangerouslySetInnerHTML={{ __html: trashMediumSvg }}
+    />
   )
 }
 
@@ -726,6 +750,21 @@ const SAVED_LINKS = [
   { label: 'Spotify – Emily', url: 'https://open.spotify.com/', icon: 'spotify', color: '#1DB954' },
 ] as const
 
+/**
+ * Open a URL in the user's real browser, bypassing our iframe / nav
+ * interception entirely. Sites with `frame-ancestors 'none'` CSP or
+ * fully-client-rendered SPAs (Next.js with empty SSR, etc.) won't
+ * render meaningfully inside ProxiedIframe; this is the escape hatch.
+ *
+ * In dev / web build: `window.open(_, '_blank')` opens a new browser
+ * tab. In Electron we'd want shell.openExternal — that path is wired
+ * up in the preload script's window.open shim if present; if not, the
+ * Electron build silently uses the same window.open fallback.
+ */
+function openInRealBrowser(url: string) {
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 function SitePreview({ url }: { url: string }) {
   const link = SAVED_LINKS.find(l => url.includes(new URL(l.url).hostname))
   const hostname = (() => { try { return new URL(url).hostname } catch { return url } })()
@@ -748,20 +787,105 @@ function SitePreview({ url }: { url: string }) {
           {hostname}
         </span>
       </div>
+      {/* Escape hatch for sites that don't iframe well. Stops the user
+       *  from staring at a blank rectangle with no path forward.
+       *
+       *  This is Arc's CTA pill recipe: `rounded-full` capsule (the
+       *  macOS prominent-button shape, deliberately distinct from the
+       *  `rounded-xl` tab rows and `rounded-md` URL chip), with the
+       *  full hover/pressed/focus-visible state set so it reads as a
+       *  real button. Reuse this recipe for any future Arc CTA. */}
+      <button
+        type="button"
+        onClick={() => openInRealBrowser(url)}
+        className="rounded-full px-4 py-2 text-[12px] font-medium text-white/85 outline-none transition-colors hover:bg-white/[0.08] active:bg-white/[0.04] focus-visible:ring-1 focus-visible:ring-white/30"
+        style={{ border: '1px solid rgba(255,255,255,0.18)', cursor: 'default' }}
+      >
+        Open in browser
+      </button>
     </div>
   )
 }
 
+/**
+ * Parse a YouTube timestamp query value into seconds.
+ *
+ * YouTube accepts several formats in the `t=` / `start=` param:
+ *   - `12915`        bare integer seconds
+ *   - `12915s`       integer with trailing `s`
+ *   - `2m15s`        minutes + seconds
+ *   - `1h2m3s`       hours + minutes + seconds
+ *   - `30m` / `1h`   partial composites
+ *
+ * Returns null for empty / malformed input or zero (so we don't bother
+ * appending `?start=0` to embed URLs that have no real offset).
+ */
+function parseYouTubeTimestamp(raw: string | null | undefined): number | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) {
+    const n = parseInt(trimmed, 10)
+    return n > 0 ? n : null
+  }
+  const m = trimmed.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i)
+  if (!m || (!m[1] && !m[2] && !m[3])) return null
+  const h = m[1] ? parseInt(m[1], 10) : 0
+  const min = m[2] ? parseInt(m[2], 10) : 0
+  const s = m[3] ? parseInt(m[3], 10) : 0
+  const total = h * 3600 + min * 60 + s
+  return total > 0 ? total : null
+}
+
+/**
+ * Build a YouTube `/embed/` URL for the given share URL, preserving the
+ * timestamp (`t=` or `start=`) and any playlist context (`list`, `index`)
+ * that the user pasted in. Returns null for non-YouTube URLs.
+ *
+ * Previously this function pulled the video ID out and threw away the
+ * rest of the URL — meaning `https://youtu.be/X?t=12915` and
+ * `https://youtube.com/watch?v=X&t=12915` both loaded the video from
+ * 0:00 because `start=` never made it onto the embed URL. The pasted
+ * timestamp now survives the watch -> embed transformation.
+ *
+ * Supported source URL shapes:
+ *   - `youtube.com/watch?v=<id>`        canonical share URL
+ *   - `youtu.be/<id>`                   short share URL
+ *   - `youtube.com/shorts/<id>`         vertical short
+ *   - `youtube.com/live/<id>`           live broadcast
+ *   - `youtube.com/embed/<id>`          already-embed URL (idempotent)
+ */
 function getYouTubeEmbedUrl(url: string): string | null {
   try {
     const u = new URL(url)
     let videoId: string | null = null
-    if (u.hostname.includes('youtube.com') && u.searchParams.has('v')) {
-      videoId = u.searchParams.get('v')
-    } else if (u.hostname === 'youtu.be') {
-      videoId = u.pathname.slice(1)
+    const slug = (prefix: string) => {
+      if (!u.pathname.startsWith(prefix)) return null
+      const rest = u.pathname.slice(prefix.length).split('/')[0]
+      return rest || null
     }
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null
+    if (u.hostname.includes('youtube.com')) {
+      if (u.searchParams.has('v')) videoId = u.searchParams.get('v')
+      else videoId = slug('/shorts/') ?? slug('/live/') ?? slug('/embed/')
+    } else if (u.hostname === 'youtu.be') {
+      videoId = u.pathname.slice(1).split('/')[0] || null
+    }
+    if (!videoId) return null
+
+    const params = new URLSearchParams()
+    const startSec = parseYouTubeTimestamp(
+      u.searchParams.get('t') ?? u.searchParams.get('start'),
+    )
+    if (startSec) params.set('start', String(startSec))
+    const list = u.searchParams.get('list')
+    if (list) params.set('list', list)
+    const index = u.searchParams.get('index')
+    if (index) params.set('index', index)
+
+    const qs = params.toString()
+    return qs
+      ? `https://www.youtube.com/embed/${videoId}?${qs}`
+      : `https://www.youtube.com/embed/${videoId}`
   } catch {
     return null
   }
@@ -1208,7 +1332,7 @@ function Sidebar({
   onFullscreen?: () => void
 }) {
   return (
-    <div className="relative flex h-full shrink-0 flex-col gap-3 pb-3 pl-2.5 pr-0 pt-2.5" style={{ width }}>
+    <div className="relative flex h-full shrink-0 flex-col gap-3 pb-5 pl-2.5 pr-0 pt-2.5" style={{ width }}>
       {/* Title bar – traffic lights + sidebar toggle, aligned with first tile.
        *  Title bar's `pl-2.5` (10px) plus the column's `pl-2.5` (10px) puts
        *  the traffic lights at 20px from the window's outer edge, matching
@@ -1237,8 +1361,14 @@ function Sidebar({
           />
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <BinWithStarsIcon />
+      {/* Sidebar footer: trash + new-tab. The column is `pl-2.5 pr-0`
+       *  (10px left, flush right), so this row's `pl-2.5 pr-5` lands both
+       *  glyphs at 20px from their respective window/sidebar edges: trash
+       *  at 10+10 from the window left (matching the traffic-light inset)
+       *  and the plus at 0+20 from the sidebar's right edge — symmetric
+       *  instead of the plus hugging the edge. */}
+      <div className="flex items-center justify-between pl-2.5 pr-5">
+        <TrashIcon />
         <div style={{ cursor: 'default' }} onClick={onNewTab}>
           <PlusIcon />
         </div>
@@ -1284,7 +1414,6 @@ export function ArcWindow({
   })
 
   const rectRef = useRef(rect)
-  rectRef.current = rect
 
   /* ── navigation state (works for both webview & iframe) ── */
   const INITIAL_URL = 'https://www.youtube.com/watch?v=8IcYpOl4Sdk'
@@ -1299,9 +1428,7 @@ export function ArcWindow({
   const listenersAttached = useRef(false)
 
   const historyRef = useRef(history)
-  historyRef.current = history
   const historyIndexRef = useRef(historyIndex)
-  historyIndexRef.current = historyIndex
 
   const navigate = useCallback((newUrl: string) => {
     const idx = historyIndexRef.current
@@ -1334,7 +1461,6 @@ export function ArcWindow({
 
   // Listen for navigation events from proxied iframes
   const navigateRef = useRef(navigate)
-  navigateRef.current = navigate
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -1473,7 +1599,20 @@ export function ArcWindow({
   const topbarColor = useFaviconColor(currentUrl)
 
   const sidebarWidthRef = useRef(sidebarWidth)
-  sidebarWidthRef.current = sidebarWidth
+
+  // Mirror the latest reactive values into refs so post-commit readers
+  // (drag handlers, the postMessage navigation listener, sidebar resize)
+  // don't capture stale closures. Written in a layout effect rather than
+  // during render: that satisfies react-hooks/refs while keeping each
+  // useRef directly visible to the React Compiler, so the refs stay
+  // recognized as stable (non-reactive) deps in the useCallbacks below.
+  useLayoutEffect(() => {
+    rectRef.current = rect
+    historyRef.current = history
+    historyIndexRef.current = historyIndex
+    navigateRef.current = navigate
+    sidebarWidthRef.current = sidebarWidth
+  })
 
   const dragRef = useRef<{
     startX: number
@@ -1709,8 +1848,12 @@ export function ArcWindow({
             if (pendingNewTab.current) {
               const id = nextNodeId.current++
               const newTab: TabNode = { type: 'tab', id, url: u }
-              // Add new tab inside the first folder (Tools)
-              setSidebarItems(prev => addTabToFolder(prev, -1, newTab))
+              // Route plus-button additions into the dedicated
+              // "Other Tabs" section at the bottom of the sidebar rather
+              // than burying them inside an existing year folder. The
+              // section is lazy-created on first use, then reused for
+              // subsequent tabs.
+              setSidebarItems(prev => appendToNewLinksFolder(prev, newTab))
               setActiveTabId(id)
               pendingNewTab.current = false
             } else if (activeTabId != null) {

@@ -33,9 +33,9 @@ const WALLPAPER_URL = '/wallpaper.jpg'
 const EXIT_MS = 500
 
 // Fixed SVG canvas for the clock. Wide enough to hold any HH:MM at
-// `fontSize: 180` SF Pro Display Semibold (the widest realistic time
-// "12:38" measures ≈ 540px), tall enough for the `line-height: normal`
-// line box (180 × 1.22 ≈ 220px). The visible glyphs are centered inside
+// `fontSize: 160` SF Pro Display Semibold (the widest realistic time
+// "12:38" measures ≈ 400px), tall enough for the `line-height: normal`
+// line box (160 × 1.22 ≈ 196px). The visible glyphs are centered inside
 // via `text-anchor="middle"` / `dominantBaseline="central"`, so the
 // container is wider than the glyphs but never wraps or clips them.
 const CLOCK_SVG_W = 600
@@ -345,7 +345,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
         aria-hidden
         width={CLOCK_SVG_W}
         height={CLOCK_SVG_H}
-        style={{ display: 'block', marginTop: -8, overflow: 'visible' }}
+        style={{ display: 'block', marginTop: -36, overflow: 'visible' }}
       >
         <defs>
           <filter
@@ -440,7 +440,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
             dominantBaseline="central"
             fontFamily={DISPLAY_FONT_STACK}
             fontWeight={600}
-            fontSize={180}
+            fontSize={160}
             fill="#ffffff"
             filter="url(#lockscreen-glyph-round)"
           >

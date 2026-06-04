@@ -21,8 +21,31 @@
  * body or UI chrome.
  */
 
+import type { CSSProperties } from 'react'
+
 export const FONT_STACK =
   '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
 
 export const DISPLAY_FONT_STACK =
   '"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+
+/**
+ * The single titled-window rule. Every window that paints its own name in
+ * the title bar / unified toolbar (Notes, Photos, Roblox Studio) spreads
+ * this so the system reads as one app family rather than three slightly
+ * different title treatments.
+ *
+ * Value matches Apple's focused-window title in dark mode: SF Pro at 13px,
+ * Semibold (600), tight optical letter-spacing, and near-white (0.96) —
+ * bright because a focused window's title should be legible, not dimmed.
+ * Earlier this drifted (Notes 12/600/#fff, Photos 13/600/0.96, Roblox
+ * 13/700/0.55); this is the reconciled rule. Add a subtitle/secondary
+ * label separately (Photos/Notes use 11-12px at ~0.4-0.52 alpha).
+ */
+export const WINDOW_TITLE_STYLE: CSSProperties = {
+  fontFamily: FONT_STACK,
+  fontSize: 13,
+  fontWeight: 600,
+  letterSpacing: '-0.14px',
+  color: 'rgba(255,255,255,0.96)',
+}

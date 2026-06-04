@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
@@ -130,7 +130,6 @@ export function NotesWindow({
   })
 
   const rectRef = useRef(rect)
-  rectRef.current = rect
 
   const closeApp = useAppStore((s) => s.closeApp)
   const setFullscreenApp = useAppStore((s) => s.setFullscreenApp)
@@ -192,7 +191,15 @@ export function NotesWindow({
   /* ── drag & resize ── */
 
   const sidebarWidthRef = useRef(sidebarWidth)
-  sidebarWidthRef.current = sidebarWidth
+
+  // Mirror latest rect + sidebar width into refs for post-commit drag
+  // handlers without stale closures. Layout-effect write (not during
+  // render) keeps react-hooks/refs happy while leaving the useRefs
+  // visible to the React Compiler as stable deps.
+  useLayoutEffect(() => {
+    rectRef.current = rect
+    sidebarWidthRef.current = sidebarWidth
+  })
 
   const dragRef = useRef<{
     startX: number
