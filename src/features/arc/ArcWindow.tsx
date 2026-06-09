@@ -891,6 +891,35 @@ function getYouTubeEmbedUrl(url: string): string | null {
   }
 }
 
+/**
+ * Map a navigation URL to the URL we actually load in the player.
+ *
+ * Scoped to timestamped YouTube links only: a YouTube URL carrying a
+ * `t=` / `start=` offset is rewritten to its `/embed/?start=` form,
+ * which — unlike the raw watch page in a webview — reliably honors the
+ * offset every time the link opens (e.g. RDC 2025 keynote @ 3:35:15 →
+ * `t=12915` plays from that mark on launch instead of 0:00).
+ *
+ * YouTube links *without* a timestamp, and all non-YouTube URLs, pass
+ * through untouched so they keep loading the full page rather than the
+ * bare embed player — the embed swap only buys us timestamp fidelity,
+ * so we only pay its cost (losing comments / related / chrome) when a
+ * timestamp is actually present.
+ */
+function toRenderUrl(url: string): string {
+  const embed = getYouTubeEmbedUrl(url)
+  if (!embed) return url
+  let hasTimestamp = false
+  try {
+    const u = new URL(url)
+    hasTimestamp =
+      parseYouTubeTimestamp(u.searchParams.get('t') ?? u.searchParams.get('start')) != null
+  } catch {
+    hasTimestamp = false
+  }
+  return hasTimestamp ? embed : url
+}
+
 // Proxy cache to avoid re-fetching pages we've already loaded
 // Uses an LRU approach: evict oldest entries when cache exceeds MAX size
 const MAX_PROXY_CACHE = 20
@@ -1085,6 +1114,34 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
   )
 }
 
+/**
+ * Link-first omnibox heuristic: does this input look like a URL the user
+ * wants to navigate to (vs. a web search)? Anything without whitespace
+ * that carries a protocol, any dot (domain / IP / path), or a
+ * `localhost[:port]` host counts as a destination — so typing a link
+ * surfaces the "go to" row first. Multi-word input (which contains
+ * spaces) falls through to search.
+ */
+function looksLikeUrl(raw: string): boolean {
+  const q = raw.trim()
+  if (!q || /\s/.test(q)) return false
+  return (
+    /^https?:\/\//i.test(q) ||
+    /\./.test(q) ||
+    /^localhost(:\d+)?(\/|$)/i.test(q)
+  )
+}
+
+/**
+ * Normalize a URL-shaped input into a navigable absolute URL, prepending
+ * `https://` when the user omitted the scheme. Pair with `looksLikeUrl`
+ * so the rendered "go to" row and the committed navigation agree.
+ */
+function toNavUrl(raw: string): string {
+  const q = raw.trim()
+  return /^https?:\/\//i.test(q) ? q : 'https://' + q
+}
+
 function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (url: string) => void; onClose: () => void }) {
   const [query, setQuery] = useState(url)
   const [selectedIdx, setSelectedIdx] = useState(0)
@@ -1106,9 +1163,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
 
   const trimmedQuery = query.trim()
   const lowerQuery = trimmedQuery.toLowerCase()
-  const isUrlShape =
-    trimmedQuery.length > 0 &&
-    (/^https?:\/\//i.test(trimmedQuery) || /^[^\s]+\.[^\s]+$/.test(trimmedQuery))
+  const isUrlShape = looksLikeUrl(trimmedQuery)
 
   const matchedBookmarks = trimmedQuery
     ? SAVED_LINKS.filter(
@@ -1122,17 +1177,17 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
   for (const link of matchedBookmarks) items.push({ kind: 'bookmark', link })
 
   const commit = useCallback((targetUrl?: string) => {
-    const finalTarget = targetUrl || query.trim()
+    const finalTarget = (targetUrl ?? '').trim() || query.trim()
     if (!finalTarget) { onClose(); return }
-    const u = finalTarget
-    if (/^https?:\/\//i.test(u)) {
-      onNavigate(u)
-    } else if (/^[^\s]+\.[^\s]+$/.test(u)) {
-      // Bare domain — assume https. Mirrors the regex used to populate the
-      // 'goto' row above, so the row's behavior matches what you see.
-      onNavigate('https://' + u)
+    if (/^https?:\/\//i.test(finalTarget)) {
+      onNavigate(finalTarget)
+    } else if (looksLikeUrl(finalTarget)) {
+      // URL-shaped but scheme-less — assume https. Mirrors `looksLikeUrl`
+      // used to populate the 'goto' row above, so the row's behavior
+      // matches what you see.
+      onNavigate(toNavUrl(finalTarget))
     } else {
-      onNavigate(`https://www.google.com/search?q=${encodeURIComponent(u)}`)
+      onNavigate(`https://www.google.com/search?q=${encodeURIComponent(finalTarget)}`)
     }
   }, [query, onNavigate, onClose])
 
@@ -1416,7 +1471,7 @@ export function ArcWindow({
   const rectRef = useRef(rect)
 
   /* ── navigation state (works for both webview & iframe) ── */
-  const INITIAL_URL = 'https://www.youtube.com/watch?v=8IcYpOl4Sdk'
+  const INITIAL_URL = 'https://www.youtube.com/watch?v=8IcYpOl4Sdk&t=755'
   const [history, setHistory] = useState<string[]>([INITIAL_URL])
   const [historyIndex, setHistoryIndex] = useState(0)
   const currentUrl = historyIndex >= 0 ? history[historyIndex] : ''
@@ -1437,7 +1492,7 @@ export function ArcWindow({
 
     if (isElectron) {
       const wv = webviewRef.current as any
-      if (wv?.loadURL) wv.loadURL(newUrl)
+      if (wv?.loadURL) wv.loadURL(toRenderUrl(newUrl))
     }
   }, [])
 
@@ -1486,14 +1541,18 @@ export function ArcWindow({
     }
 
     const onDidNavigate = (e: any) => {
-      if (e.url && e.url !== 'about:blank') {
-        const idx = historyIndexRef.current
-        const prev = historyRef.current
-        if (prev[idx] !== e.url) {
-          setHistory([...prev.slice(0, idx + 1), e.url])
-          setHistoryIndex(idx + 1)
-        }
-      }
+      if (!e.url || e.url === 'about:blank') return
+      const idx = historyIndexRef.current
+      const prev = historyRef.current
+      const current = prev[idx]
+      // We load YouTube as its `/embed/` form to honor timestamps, so the
+      // webview reports that embed URL back here. Treat "navigated to the
+      // render form of where we already are" as a no-op — otherwise it
+      // pushes a phantom history entry and replaces the clean watch URL in
+      // the topbar with the ugly embed URL.
+      if (e.url === current || e.url === toRenderUrl(current)) return
+      setHistory([...prev.slice(0, idx + 1), e.url])
+      setHistoryIndex(idx + 1)
     }
 
     wv.addEventListener('did-start-loading', onStart)
@@ -1524,7 +1583,7 @@ export function ArcWindow({
   const [sidebarItems, setSidebarItems] = useState<SidebarNode[]>([
     { type: 'folder', id: -1, label: '2026', expanded: true, children: [
       { type: 'folder', id: -2, label: 'Agentic Studio', expanded: true, children: [
-        { type: 'tab', id: 0, url: 'https://www.youtube.com/watch?v=8IcYpOl4Sdk', title: 'Tech Talks EP33 | The Future of Agentic Game Creation' },
+        { type: 'tab', id: 0, url: 'https://www.youtube.com/watch?v=8IcYpOl4Sdk&t=755', title: 'Tech Talks EP33 | The Future of Agentic Game Creation' },
         { type: 'tab', id: -3, url: 'https://about.roblox.com/newsroom/2026/04/roblox-studio-going-agentic', title: 'Roblox Studio is Going Agentic' },
         { type: 'tab', id: -5, url: 'https://devforum.roblox.com/t/announcing-planning-mode-for-roblox-assistant/4580715', title: 'Announcing Planning Mode for Roblox Assistant' },
       ] },
@@ -1821,7 +1880,7 @@ export function ArcWindow({
                 isElectron ? (
                   <webview
                     ref={webviewRef as any}
-                    src={currentUrl}
+                    src={toRenderUrl(currentUrl)}
                     style={{
                       position: 'absolute',
                       inset: 0,
