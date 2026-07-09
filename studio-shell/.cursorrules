@@ -1,0 +1,258 @@
+# Studio Shell Game Editor - Cursor Rules
+
+## Project Overview
+Studio Shell is a modern game editor built with React, TypeScript, and Vite. It features a forge-inspired aesthetic with warm amber/copper accents on an industrial dark theme.
+
+## Tech Stack
+- React 18 with TypeScript
+- Vite for build tooling
+- Zustand for state management
+- CSS Modules for component styling
+- Lucide React for icons
+
+## Development Workflow
+- Build features piece-by-piece, not all at once
+- After completing each discrete piece/component, commit the changes
+- Move on to the next feature only after the current piece is committed
+- This ensures incremental progress and makes it easier to track changes
+- Each commit should represent a complete, functional unit of work
+
+## Code Style & Conventions
+
+### TypeScript
+- Use strict TypeScript mode
+- Always define proper types, avoid `any`
+- Prefer interfaces over types for object shapes
+- Use type inference where possible
+- Export types from `src/types/index.ts`
+
+### React
+- Use functional components with hooks
+- Prefer named exports for components
+- Use meaningful component and variable names
+- Keep components focused and single-responsibility
+- Extract reusable logic into custom hooks
+
+### File Structure
+```
+src/
+├── components/
+│   ├── shared/         # Reusable UI components
+│   └── [Feature]/      # Feature-specific components
+│       ├── [Feature].tsx
+│       └── [Feature].module.css
+├── store/              # Zustand stores
+├── types/              # TypeScript type definitions
+├── hooks/              # Custom React hooks
+├── utils/              # Utility functions
+└── styles/             # Global styles
+```
+
+### Naming Conventions
+- Components: PascalCase (e.g., `GameObjectTree.tsx`)
+- Hooks: camelCase with "use" prefix (e.g., `useEditorState`)
+- Utilities: camelCase (e.g., `formatTransform`)
+- CSS Modules: camelCase classes (e.g., `.panelHeader`)
+- Constants: UPPER_SNAKE_CASE (e.g., `MAX_OBJECTS`)
+- Types/Interfaces: PascalCase (e.g., `GameObject`, `Transform`)
+
+### CSS & Styling
+- Use CSS Modules for component-specific styles
+- Use `styles.css` or `global.css` for shared utilities
+- Follow BEM-like naming for CSS classes
+- Use CSS variables from `:root` for colors, spacing, etc.
+- Prefer flexbox and grid for layouts
+- Mobile-first responsive design when applicable
+
+### State Management
+- Use Zustand for global application state
+- Keep local state in components when possible
+- Use derived state instead of duplicating data
+- Actions should be co-located with state in stores
+- Use selectors to access only needed state
+
+### Component Patterns
+- Extract shared UI components to `components/shared/`
+- Use composition over inheritance
+- Pass callbacks via props for child-to-parent communication
+- Use context sparingly, prefer props drilling or Zustand
+- Implement loading and error states
+
+### Color Palette
+Use these CSS variables consistently:
+- Background: `--bg-darkest` (#121215), `--bg-dark`, `--bg-panel`, `--bg-surface`
+- Accent: `--accent-primary` (#e67e22), `--accent-light`, `--accent-dark`
+- Secondary: `--accent-secondary` (#00d4aa)
+- Text: `--text-primary`, `--text-secondary`, `--text-muted`
+- Semantic: `--color-success`, `--color-warning`, `--color-error`, `--color-info`
+
+### Icons
+- Use Lucide React for all icons
+- Keep icon size consistent (12-24px typically)
+- Use semantic icon names
+- Color icons using CSS variables
+
+### Accessibility
+- Use semantic HTML elements
+- Include ARIA labels where needed
+- Ensure keyboard navigation works
+- Maintain proper focus states
+- Use sufficient color contrast
+
+### Performance
+- Memoize expensive computations with `useMemo`
+- Use `useCallback` for callbacks passed to child components
+- Lazy load components when appropriate
+- Avoid unnecessary re-renders
+- Profile before optimizing
+
+### Error Handling
+- Use try-catch for async operations
+- Log errors to console in development
+- Provide user-friendly error messages
+- Handle edge cases gracefully
+- Validate user input
+
+### Testing Considerations
+- Write testable code (pure functions, small components)
+- Separate business logic from UI
+- Use meaningful test IDs when needed
+- Consider edge cases and error states
+
+## Editor-Specific Guidelines
+
+### Game Objects
+- Every GameObject must have a unique ID
+- Maintain parent-child relationships carefully
+- Validate transforms before applying
+- Support undo/redo for object operations
+
+### Scene Hierarchy
+- Support nested object structures
+- Implement drag-and-drop for reparenting
+- Show visual feedback for selections
+- Maintain object visibility states
+
+### Inspector Panel
+- Show properties for selected object only
+- Group related properties together
+- Validate numeric inputs
+- Provide sensible default values
+
+### Viewport
+- Render objects based on their transforms
+- Show visual guides (grid, axes, etc.)
+- Support multiple view modes (2D/3D)
+- Optimize rendering for performance
+
+### Assets
+- Organize assets by type
+- Support search and filtering
+- Show thumbnails when applicable
+- Handle missing assets gracefully
+
+### Console
+- Log all important operations
+- Support different message types (log, warning, error)
+- Show timestamps and sources
+- Provide clear, actionable messages
+
+## Git Conventions
+- Use conventional commits format
+- Write descriptive commit messages
+- Keep commits focused and atomic
+- Commit after each complete feature piece before moving to the next
+- Each commit should be a working, testable unit
+- Branch naming: `feature/`, `fix/`, `refactor/`
+
+## Comments & Documentation
+- Use JSDoc for public functions and components
+- Explain "why" not "what" in comments
+- Keep comments up-to-date
+- Document complex algorithms
+- Add README files for major features
+
+## Dependencies
+- Minimize external dependencies
+- Keep dependencies up-to-date
+- Prefer well-maintained libraries
+- Document why dependencies were added
+
+## Common Patterns
+
+### Creating a New Panel
+```typescript
+import { Panel } from '../shared/Panel'
+import { IconButton } from '../shared/IconButton'
+import { Icon } from 'lucide-react'
+import styles from './MyPanel.module.css'
+
+export function MyPanel() {
+  return (
+    <Panel
+      title="My Panel"
+      icon={<Icon size={16} />}
+      actions={<IconButton icon={<Icon />} />}
+    >
+      {/* Content */}
+    </Panel>
+  )
+}
+```
+
+### Adding to Store
+```typescript
+// In store/editorStore.ts
+interface EditorStore {
+  // State
+  myState: string
+  
+  // Actions
+  setMyState: (value: string) => void
+}
+
+// In create() callback
+myState: '',
+setMyState: (value) => set({ myState: value }),
+```
+
+### Using Store in Component
+```typescript
+import { useEditorStore } from '../../store/editorStore'
+
+export function MyComponent() {
+  const myState = useEditorStore((state) => state.myState)
+  const setMyState = useEditorStore((state) => state.setMyState)
+  
+  // Use state and actions
+}
+```
+
+## Don't
+- ❌ Don't use inline styles
+- ❌ Don't mutate state directly
+- ❌ Don't use var, always use const/let
+- ❌ Don't ignore TypeScript errors
+- ❌ Don't create deeply nested components
+- ❌ Don't use magic numbers, use constants
+- ❌ Don't skip prop validation
+- ❌ Don't use index as key in lists (unless static)
+
+## Do
+- ✅ Use semantic HTML
+- ✅ Keep components small and focused
+- ✅ Use TypeScript strictly
+- ✅ Follow consistent naming conventions
+- ✅ Write self-documenting code
+- ✅ Handle edge cases
+- ✅ Provide user feedback
+- ✅ Keep dependencies minimal
+- ✅ Use CSS variables for theming
+- ✅ Test edge cases
+
+## Resources
+- React Docs: https://react.dev
+- TypeScript Docs: https://www.typescriptlang.org/docs
+- Zustand Docs: https://github.com/pmndrs/zustand
+- Lucide Icons: https://lucide.dev
+

@@ -1,0 +1,1080 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 8px;
+  color: var(--content-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 120px;
+  padding: 5px 8px 5px 26px;
+  background: var(--bg-surface100);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--content-emphasis);
+  transition: all var(--transition-fast);
+}
+
+.searchInput::placeholder {
+  color: var(--content-muted);
+}
+
+.searchInput:focus {
+  width: 160px;
+  border-color: var(--accent-primary);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
+  gap: 0;
+  overflow: hidden;
+  background: var(--bg-surface100);
+}
+
+.sideNavWrap {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  background: var(--bg-surface100);
+  border-right: none;
+}
+
+/* Search field – same height as .contentRow (42px), shared bottom border */
+.sideNavSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  flex-shrink: 0;
+  height: 42px;
+  padding: 0 8px;
+  background: var(--bg-surface100);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sideNavSearchContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  background: rgba(208, 217, 251, 0.08); /* #D0D9FB at 8% */
+  border: none;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+  justify-content: flex-start;
+  color: rgba(40, 41, 49, 1);
+  outline: none;
+}
+
+.sideNavSearchContainer:hover {
+  background: var(--content-hover);
+}
+
+.sideNavSearchContainer:focus-within {
+  background: rgba(208, 217, 251, 0.08); /* #D0D9FB at 8% */
+  color: rgba(40, 41, 49, 1);
+}
+
+.sideNavSidebarIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.sideNavSearchIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.sideNavSearchInput {
+  border: none;
+  background: transparent;
+  color: var(--content-muted);
+  font-size: 12px;
+  font-weight: 400;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.sideNavSearchInput::placeholder {
+  color: var(--content-muted);
+}
+
+.sideNavSearchClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sideNavSearchClear:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sideNav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 0;
+  background-color: rgba(25, 26, 31, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sideNavTree {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  user-select: none;
+}
+
+.sideNavRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 2px 8px 2px 0;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-radius: 4px;
+}
+
+.sideNavRow:hover {
+  background: var(--content-hover);
+}
+
+.sideNavRowSelected {
+  background: rgba(60, 100, 250, 0.08);
+}
+
+.sideNavRowSelected:hover {
+  background: rgba(60, 100, 250, 0.08);
+}
+
+.sideNavExpand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  visibility: hidden;
+  color: var(--content-muted);
+}
+
+.sideNavRowProject .sideNavExpand {
+  visibility: visible;
+}
+
+.sideNavRowProject .sideNavIcon {
+  display: none;
+}
+
+.sideNavRowProject .sideNavName {
+  font-weight: 600;
+}
+
+/* Row with chevron + icon (e.g. Assets): show expand, keep icon visible */
+.sideNavRowWithChevron .sideNavExpand {
+  visibility: visible;
+}
+
+.sideNavIcon {
+  display: flex;
+  align-items: center;
+  color: var(--content-link);
+  flex-shrink: 0;
+}
+
+.sideNavIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sideNavIcon img,
+.sideNavIcon svg {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+}
+
+.sideNavName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--content-emphasis);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Resize handle spans full height of widget (sibling of .sideNavWrap and .content under .body); left border is the only divider so no gap */
+.sideNavResizeHandle {
+  flex-shrink: 0;
+  width: 4px;
+  min-width: 4px;
+  align-self: stretch;
+  cursor: ew-resize;
+  background: transparent;
+  border-left: 1px solid var(--border-subtle);
+  transition: background 0.12s ease;
+  pointer-events: auto;
+}
+
+.sideNavResizeHandle:hover,
+.sideNavResizeHandle:active {
+  background: var(--border-subtle);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-surface100);
+}
+
+/* Permanent row – same height (42px) as .sideNavSearch, shared bottom border; no left border so it’s continuous with resize handle */
+.contentRow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  background: var(--bg-surface100);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.contentRowSpacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.contentRowActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.contentRowActions img,
+.contentRowActions svg {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+}
+
+.contentRowSeparator {
+  width: 1px;
+  height: 16px;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.queueLeftActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.queueLeftActions button {
+  margin: 0;
+}
+
+.queueLeftActions img,
+.queueLeftActions svg {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+}
+
+.queueSearchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  background: rgba(208, 217, 251, 0.08);
+  border: none;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+  justify-content: flex-start;
+}
+
+.queueSearchContainer:hover {
+  background: var(--content-hover);
+}
+
+.queueSearchContainer:focus-within {
+  background: rgba(208, 217, 251, 0.08);
+}
+
+.queueSearchIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.queueSearchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(208, 217, 251, 1);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0;
+  min-width: 0;
+}
+
+.queueSearchInput::placeholder {
+  color: rgba(208, 217, 251, 0.4);
+}
+
+.queueSearchClear {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(208, 217, 251, 0.6);
+  transition: color var(--transition-fast);
+  border-radius: 4px;
+}
+
+.queueSearchClear:hover {
+  color: rgba(208, 217, 251, 1);
+  background: rgba(208, 217, 251, 0.12);
+}
+
+.contentRowChevrons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  flex-shrink: 0;
+}
+
+.importButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  min-height: 24px;
+  padding: 0 12px;
+  margin: 0;
+  border: none;
+  background: rgba(208, 217, 251, 0.12); /* #D0D9FB at 12% */
+  color: var(--content-emphasis);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.importButton:hover {
+  background: rgba(208, 217, 251, 0.2);
+}
+
+.contentScroll {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 0px;
+  background: var(--bg-surface100);
+  padding: 0;
+  /* Enable smooth scrolling on Safari/Arc */
+  -webkit-overflow-scrolling: touch;
+}
+
+.contentTableWrap {
+  display: block;
+  width: 100%;
+  min-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--bg-surface100);
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.contentTable {
+  display: table;
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+/* Import queue: 5 columns fill width, Status 72px fixed on the right */
+.contentTableColFill {
+  width: calc((100% - 72px) / 5);
+}
+
+.contentTableColStatus {
+  width: 72px;
+}
+
+.contentTable thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-surface100);
+}
+
+.contentTable thead tr {
+  position: relative;
+}
+
+.contentTable thead tr::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(208, 217, 251, 0.12);
+}
+
+
+.contentTableTh {
+  text-align: left;
+  padding: 4px 12px;
+  font-family: 'Builder Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  font-size: 10px;
+  color: #BCBEC8;
+  border-bottom: none;
+  white-space: nowrap;
+  height: 24px;
+  vertical-align: middle;
+  position: relative;
+  background: transparent;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contentTableTh:first-child {
+  color: #F7F7F8;
+}
+
+/* Import queue: 5 columns fill width, Status 72px on the right */
+.contentTableThCheckbox {
+  width: calc((100% - 72px) / 5);
+  min-width: 32px;
+}
+
+.contentTableThQueue {
+  width: calc((100% - 72px) / 5);
+  color: #BCBEC8 !important;
+  font-weight: 400;
+}
+
+.contentTableThQueue ~ .contentTableTh:not(.contentTableThStatus):not(.contentTableThFilePath) {
+  width: calc((100% - 72px) / 5);
+}
+
+.contentTableThFilePath {
+  width: calc((100% - 72px) / 5);
+}
+
+.contentTableThDivider {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 16px;
+  background: rgba(240, 240, 240, 0.1);
+  border-radius: 0.5px;
+}
+
+.contentTableTh:last-child .contentTableThDivider {
+  display: none;
+}
+
+/* Resizable column divider – right edge of each th (except Status); drag to resize */
+.contentTableThResizeHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 1;
+  user-select: none;
+}
+
+.contentTableThResizeHandle:hover::after {
+  background: rgba(240, 240, 240, 0.25);
+}
+
+.contentTableThResizeHandle::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 16px;
+  background: rgba(240, 240, 240, 0.1);
+  border-radius: 0.5px;
+}
+
+.contentTableTh:last-child .contentTableThResizeHandle {
+  display: none;
+}
+
+.contentTableThDropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contentTableThDropdownIcon {
+  width: 12px;
+  height: 12px;
+  color: #A1A2A5;
+}
+
+/* Status column: narrowest column in the table */
+.contentTableThStatus {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+}
+
+.contentTableTdStatus {
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
+}
+
+.contentTableTdFilePath {
+  color: #528BFF !important;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contentTableRow {
+  position: relative;
+  outline: none;
+}
+
+.contentTableRow::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(208, 217, 251, 0.12);
+}
+
+.contentTableRow:hover {
+  background: var(--content-hover);
+}
+
+.contentTableRowSelected {
+  background: rgba(60, 100, 250, 0.16);
+}
+
+.contentTableRowSelected:hover {
+  background: rgba(60, 100, 250, 0.16);
+}
+
+.contentTableRow:focus-visible {
+  outline: 2px solid rgba(60, 100, 250, 0.6);
+  outline-offset: -2px;
+}
+
+.contentTableRow.dragOver {
+  background: rgba(46, 204, 113, 0.15);
+  outline: 2px solid rgba(46, 204, 113, 0.5);
+  outline-offset: -2px;
+}
+
+.contentTableTd {
+  padding: 8px 12px;
+  color: var(--content-emphasis);
+  vertical-align: middle;
+}
+
+.contentTableAssetIcon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: var(--content-muted);
+}
+
+.contentTableEmpty {
+  padding: 24px;
+  text-align: center;
+  color: var(--content-muted);
+}
+
+/* Grid view – tile structure based on AM-tile.svg (109×157, preview 108×108 rx 8, label below) */
+.gridView {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  /* Enable GPU acceleration for smoother scrolling on Safari/Arc */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.assetTile {
+  width: 109px;
+  height: 157px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background var(--transition-fast), padding var(--transition-fast), width var(--transition-fast), height var(--transition-fast), margin var(--transition-fast);
+  border-radius: 8px;
+  /* Enable GPU acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Enable dragging */
+  -webkit-user-drag: auto;
+  user-select: none;
+  /* Remove default focus outline */
+  outline: none;
+}
+
+.assetTile[draggable="true"] {
+  cursor: grab;
+}
+
+.assetTile[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Hover: 4px padding without shrinking content – tile grows so content area stays 109×157 */
+.assetTile:hover {
+  background: var(--content-hover);
+  padding: 4px;
+  width: 117px;
+  height: 165px;
+  margin: -4px;
+}
+
+/* Pressed (:active): same 4px padding/size, blue highlight */
+.assetTile:active {
+  background: rgba(60, 100, 250, 0.08);
+  padding: 4px;
+  width: 117px;
+  height: 165px;
+  margin: -4px;
+}
+
+/* Selected: same 4px padding/size so content doesn’t shrink */
+.assetTile.selected {
+  background: rgba(60, 100, 250, 0.08);
+  padding: 4px;
+  width: 117px;
+  height: 165px;
+  margin: -4px;
+  border-radius: 0;
+}
+
+.assetTile.selected:hover {
+  background: rgba(60, 100, 250, 0.08);
+  border-radius: 0;
+}
+
+/* Focus state for keyboard navigation - only show when using keyboard */
+.assetTile:focus-visible {
+  outline: 2px solid rgba(60, 100, 250, 0.6);
+  outline-offset: -2px;
+}
+
+/* Drag over folder state */
+.assetTile.dragOver {
+  background: rgba(46, 204, 113, 0.15);
+  border: 2px solid rgba(46, 204, 113, 0.5);
+  padding: 2px;
+  width: 113px;
+  height: 161px;
+  margin: -4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.assetTilePreview {
+  width: 100%;
+  height: 108px;
+  min-height: 108px;
+  border-radius: 8px;
+  background: rgba(208, 217, 251, 0.08); /* #D0D9FB at 8% */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--content-link);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  /* Optimize rendering */
+  contain: strict;
+  content-visibility: auto;
+  /* Prevent preview from interfering with drag */
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.assetTilePreview.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(208, 217, 251, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  pointer-events: none;
+}
+
+.assetTilePreview svg,
+.assetTilePreview img:not(.assetTilePreviewTexture) {
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.assetTilePreviewTexture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.assetTileInfo {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.assetTileLabel {
+  flex-shrink: 0;
+  padding: 6px 4px 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--content-emphasis);
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 1.3;
+  position: relative;
+  max-width: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.assetTileLabelOverflowing::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 6px;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(to right, transparent, var(--bg-surface100));
+  pointer-events: none;
+}
+
+.assetTile:hover .assetTileLabelOverflowing::after {
+  background: linear-gradient(to right, transparent, var(--content-hover));
+}
+
+.assetTileSublabel {
+  flex-shrink: 0;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--content-muted);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* List view styles - AssetTile within table cell */
+.assetTileList {
+  width: auto;
+  height: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: none;
+}
+
+.assetTileList:hover {
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.assetTileList:active {
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.assetTileList.selected {
+  background: transparent;
+  padding: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.assetTileList.selected:hover {
+  background: transparent;
+}
+
+.assetTilePreviewList {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  min-width: 28px;
+  border-radius: 4px;
+}
+
+.assetTilePreviewList svg,
+.assetTilePreviewList img:not(.assetTilePreviewTexture) {
+  width: 16px;
+  height: 16px;
+}
+
+.assetTileList .assetTileInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.assetTileList .assetTileLabel {
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  color: var(--content-emphasis);
+}
+
+.assetTileList .assetTileSublabel {
+  display: none;
+}
+
+.assetTileRenameInput {
+  flex-shrink: 0;
+  padding: 2px 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--content-emphasis);
+  text-align: left;
+  background: var(--bg-surface200);
+  border: 1px solid var(--accent-primary);
+  border-radius: 4px;
+  outline: none;
+  width: 100%;
+  line-height: 1.3;
+  pointer-events: auto;
+  user-select: text;
+}
+
+/* Import Queue Styles */
+.importPresetSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  width: 100%;
+  height: 28px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--content-default);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.importPresetSelect:hover {
+  background: transparent;
+  color: var(--content-emphasis);
+}
+
+.importPresetSelect:focus {
+  background: transparent;
+  color: var(--content-emphasis);
+}
+
+.statusIcon {
+  margin-right: 6px;
+  font-weight: bold;
+}
+
+.statusPending {
+  color: var(--text-muted);
+}
+
+.statusImporting {
+  color: var(--accent-primary);
+}
+
+.statusSuccess {
+  color: var(--color-success);
+}
+
+.statusError {
+  color: var(--color-error);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.progressCircle {
+  /* Progress animation handled by cycling through ProgressCircle-1.svg to ProgressCircle-4.svg */
+}
+
+.contentTableThCheckbox {
+  width: 32px;
+  min-width: 32px;
+  padding: 8px;
+  text-align: center;
+}
+
+.contentTableTdCheckbox {
+  width: 32px;
+  min-width: 32px;
+  padding: 8px;
+  text-align: center;
+}
+
+.tableCheckbox {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+.tableCheckboxIcon {
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+

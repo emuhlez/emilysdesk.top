@@ -1,0 +1,191 @@
+.wrapper {
+  flex: 0 0 auto;
+  padding: 0 12px 4px;
+}
+
+.drawer {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface100);
+  overflow: hidden;
+}
+
+:global(.taskDrawerSlot) .wrapper {
+  padding: 0;
+}
+
+:global(.taskDrawerSlot) .drawer {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--content-default);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.header:hover {
+  background: var(--bg-surface200);
+}
+
+.headerIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.headerLabel {
+  flex: 1;
+}
+
+.headerStatus {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.spinner {
+  animation: spin 0.6s linear infinite;
+  color: var(--accent-primary);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.checkmarkDone {
+  color: #22c55e;
+}
+
+.chevron {
+  display: flex;
+  align-items: center;
+  color: var(--content-muted);
+  transition: transform 0.15s;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* Todo list */
+.todoList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.todoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--content-default);
+}
+
+.todoItem + .todoItem {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.todoItemCurrent {
+  border-left: 2px solid var(--accent-primary, #3b82f6);
+  padding-left: 8px;
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--content-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.checkboxChecked {
+  border-color: var(--border-default, rgba(255, 255, 255, 0.16));
+  background: var(--content-muted);
+}
+
+.checkIcon {
+  color: var(--bg-darkest, #121215);
+}
+
+.todoLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.todoLabelDone {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.category {
+  font-weight: 500;
+  color: var(--content-muted);
+}
+
+/* Step-by-step action buttons */
+.stepActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stepActionButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 6px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface200);
+  color: var(--content-default);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stepActionButton:hover {
+  background: var(--bg-surface300);
+}
+
+.stepActionButtonPrimary {
+  background: var(--accent-primary, #3b82f6);
+  border-color: var(--accent-primary, #3b82f6);
+  color: white;
+}
+
+.stepActionButtonPrimary:hover {
+  opacity: 0.9;
+  background: var(--accent-primary, #3b82f6);
+}
+
+.kbd {
+  font-size: 9px;
+  opacity: 0.6;
+  font-family: inherit;
+}

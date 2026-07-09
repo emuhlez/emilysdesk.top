@@ -1,0 +1,225 @@
+/* Menu – Figma AI-Native-Studio node 1181-1558 */
+.dropdown {
+  position: fixed;
+  z-index: 1100;
+  /* Hug content: short category lists (Scripts, Folders, Active Tabs, Docs)
+     stay compact so the 220px submenu has room on the right side without
+     pushing past the panel edge. */
+  width: fit-content;
+  min-width: 140px;
+  max-width: 200px;
+  max-height: 320px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 5px;
+  background: var(--bg-surface200, #202227);
+  border: 1px solid var(--border-default, rgba(208, 217, 251, 0.12));
+  border-radius: var(--radius-md, 8px);
+  box-shadow:
+    0 2px 4px rgba(4, 4, 8, 0.25),
+    0 10px 20px rgba(4, 4, 8, 0.25),
+    0 16px 32px rgba(4, 4, 8, 0.25),
+    0 48px 56px rgba(4, 4, 8, 0.25);
+}
+
+.dropdown::-webkit-scrollbar,
+.subMenu::-webkit-scrollbar {
+  width: 8px;
+}
+.dropdown::-webkit-scrollbar-track,
+.subMenu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dropdown::-webkit-scrollbar-thumb,
+.subMenu::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  min-height: 24px;
+}
+.dropdown::-webkit-scrollbar-thumb:hover,
+.subMenu::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+  background-clip: padding-box;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--content-emphasis, #f7f7f8);
+  min-height: 16px;
+  user-select: none;
+}
+
+.categoryLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoryChevron {
+  flex-shrink: 0;
+  color: var(--content-muted, #bcbec8);
+}
+
+/* Clickable category row when @ with no input (opens sub-menu) */
+.categoryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--content-emphasis, #f7f7f8);
+  min-height: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.categoryRow:hover {
+  background: var(--content-hover, rgba(208, 217, 251, 0.08));
+}
+
+.categoryRow[data-selected='true'] {
+  background: var(--content-pressed, rgba(208, 217, 251, 0.12));
+}
+
+.categoryRow[data-selected='true']:hover {
+  background: var(--content-pressed, rgba(208, 217, 251, 0.12));
+}
+
+.subMenu {
+  position: fixed;
+  z-index: 1101;
+  width: 220px;
+  max-height: 240px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 5px;
+  background: var(--bg-surface200, #202227);
+  border: 1px solid var(--border-default, rgba(208, 217, 251, 0.12));
+  border-radius: var(--radius-md, 8px);
+  box-shadow:
+    0 2px 4px rgba(4, 4, 8, 0.25),
+    0 10px 20px rgba(4, 4, 8, 0.25),
+    0 16px 32px rgba(4, 4, 8, 0.25),
+    0 48px 56px rgba(4, 4, 8, 0.25);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--content-default, #d5d7dd);
+  min-height: 24px;
+}
+
+.option:hover {
+  background: var(--content-hover, rgba(208, 217, 251, 0.08));
+  color: var(--content-emphasis, #f7f7f8);
+}
+
+.option[data-selected='true'] {
+  background: var(--content-pressed, rgba(208, 217, 251, 0.12));
+  color: var(--content-emphasis, #f7f7f8);
+}
+
+.option[data-selected='true']:hover {
+  background: var(--content-pressed, rgba(208, 217, 251, 0.12));
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--content-muted, #bcbec8);
+}
+
+/* Submenu option icon – Figma node 1187-39700 */
+.submenuIconImg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+/* Collaborator avatar – Figma Avatar node 1185-39634 (circular, image or initial fallback) */
+.avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-shift-200, rgba(208, 217, 251, 0.08));
+  overflow: hidden;
+}
+
+.avatarImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.avatarInitial {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--content-emphasis, #f7f7f8);
+  text-transform: uppercase;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

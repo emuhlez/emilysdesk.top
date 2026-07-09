@@ -27,20 +27,40 @@ const ARC_ACCENT = '#5046E5'
 
 /* ─── helpers ─── */
 
+/* Minimal surface of Electron's <webview> element — just the imperative methods
+ * we call. The 'webview' intrinsic is declared as a plain HTMLElement (see
+ * src/types/electron.d.ts), so we narrow `.current` to this when invoking them. */
+interface WebviewTag extends HTMLElement {
+  loadURL(url: string): Promise<void>
+  goBack(): void
+  goForward(): void
+  canGoBack(): boolean
+  canGoForward(): boolean
+  reload(): void
+  stop(): void
+  insertCSS(css: string): Promise<string>
+}
+
 function useFaviconColor(url: string, fallback = '#1f1f1f'): string {
   const [color, setColor] = useState(fallback)
 
+  /* Reset to the fallback during render whenever the URL changes, rather than
+   * calling setColor synchronously inside the effect (which triggers a
+   * cascading render). The async favicon-color computation below then paints
+   * the real color once the icon loads. */
+  const [trackedUrl, setTrackedUrl] = useState(url)
+  if (url !== trackedUrl) {
+    setTrackedUrl(url)
+    setColor(fallback)
+  }
+
   useEffect(() => {
-    if (!url) {
-      setColor(fallback)
-      return
-    }
+    if (!url) return
 
     let hostname: string
     try {
       hostname = new URL(url).hostname
     } catch {
-      setColor(fallback)
       return
     }
 
@@ -909,30 +929,36 @@ function getYouTubeEmbedUrl(url: string): string | null {
 /**
  * Map a navigation URL to the URL we actually load in the player.
  *
- * Scoped to timestamped YouTube links only: a YouTube URL carrying a
- * `t=` / `start=` offset is rewritten to its `/embed/?start=` form,
- * which — unlike the raw watch page in a webview — reliably honors the
- * offset every time the link opens (e.g. RDC 2025 keynote @ 3:35:15 →
- * `t=12915` plays from that mark on launch instead of 0:00).
+ * Every YouTube link is rewritten to its `/embed/` form (timestamp via
+ * `start=`, plus playlist `list`/`index`, all preserved); non-YouTube
+ * URLs pass through untouched.
  *
- * YouTube links *without* a timestamp, and all non-YouTube URLs, pass
- * through untouched so they keep loading the full page rather than the
- * bare embed player — the embed swap only buys us timestamp fidelity,
- * so we only pay its cost (losing comments / related / chrome) when a
- * timestamp is actually present.
+ * We embed *all* YouTube — not just timestamped links — so the Electron
+ * `<webview>` path behaves identically to the web `<ProxiedIframe>` path,
+ * which is *forced* to embed every YouTube link (YouTube blocks
+ * proxy-framing of its watch page). Unifying on embed means a timestamped
+ * link honors its offset reliably and consistently in both runtimes —
+ * which is the whole point — at the cost of YouTube always rendering as
+ * the bare player rather than the full watch page.
  */
 function toRenderUrl(url: string): string {
-  const embed = getYouTubeEmbedUrl(url)
-  if (!embed) return url
-  let hasTimestamp = false
-  try {
-    const u = new URL(url)
-    hasTimestamp =
-      parseYouTubeTimestamp(u.searchParams.get('t') ?? u.searchParams.get('start')) != null
-  } catch {
-    hasTimestamp = false
-  }
-  return hasTimestamp ? embed : url
+  return getYouTubeEmbedUrl(url) ?? url
+}
+
+/**
+ * Do two URLs resolve to the same player destination? Compares the
+ * `/embed/<id>` base (ignoring query params + host normalization) for
+ * YouTube, so the webview re-reporting its own embed URL with
+ * player-appended params (a `did-navigate-in-page` from the embed) isn't
+ * mistaken for a fresh navigation. Falls back to exact equality for
+ * everything else.
+ */
+function isSamePlayerTarget(a: string, b: string): boolean {
+  if (a === b) return true
+  const ea = getYouTubeEmbedUrl(a)
+  const eb = getYouTubeEmbedUrl(b)
+  if (ea && eb) return ea.split('?')[0] === eb.split('?')[0]
+  return false
 }
 
 // Proxy cache to avoid re-fetching pages we've already loaded
@@ -991,10 +1017,24 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
   const [showNew, setShowNew] = useState(false)
   const embedUrl = getYouTubeEmbedUrl(url)
   const prevUrlRef = useRef<string | null>(null)
+  /* Latest blobUrl, read inside the loader effect to seed the crossfade without
+   * making blobUrl an effect dependency — depending on it would re-run the
+   * effect every time it sets blobUrl, causing a reload loop. */
+  const blobUrlRef = useRef(blobUrl)
+  useEffect(() => {
+    blobUrlRef.current = blobUrl
+  })
 
   // Trigger prefetch on mount
   useEffect(() => { prefetchSavedLinks() }, [])
 
+  /* eslint-disable react-hooks/set-state-in-effect --
+   * This effect orchestrates the proxied-iframe double-buffer. When the URL
+   * changes it must synchronously reset/seed loading + blob state before kicking
+   * off the async proxy fetch, and re-seed prevBlobUrl so the previous frame
+   * stays visible during the crossfade. These synchronous resets are intentional
+   * and tightly coupled to the fetch; the rule's render-time/key alternatives
+   * would tear down the previous <iframe> and break the crossfade. */
   useEffect(() => {
     if (embedUrl) {
       setBlobUrl(null)
@@ -1007,7 +1047,7 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
     // Check cache first
     const cached = proxyCache.get(url)
     if (cached) {
-      setPrevBlobUrl(blobUrl)
+      setPrevBlobUrl(blobUrlRef.current)
       setBlobUrl(cached)
       setStatus('loaded')
       setShowNew(false)
@@ -1019,7 +1059,7 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
     setStatus('loading')
     setShowNew(false)
     // Keep previous blob visible during load
-    if (blobUrl) setPrevBlobUrl(blobUrl)
+    if (blobUrlRef.current) setPrevBlobUrl(blobUrlRef.current)
     let cancelled = false
 
     fetch(`/api/iframe-check`, {
@@ -1047,6 +1087,7 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
       // Don't revoke - it's in the cache now
     }
   }, [url, embedUrl])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Crossfade: once new iframe loads, reveal it
   const handleNewLoad = () => {
@@ -1493,6 +1534,15 @@ export function ArcWindow({
   const canGoBack = historyIndex > 0
   const canGoForward = historyIndex < history.length - 1
 
+  // The Electron <webview> src is uncontrolled after mount: it seeds the
+  // first load, then every navigation is driven imperatively via
+  // loadURL/goBack/goForward below. Binding src to currentUrl as well would
+  // load each page twice (once from the src change, once from loadURL) and
+  // let the webview's native history drift out of sync with our React
+  // history. Captured once so React never re-navigates the webview behind
+  // our back; `did-navigate` keeps our history in step with the webview.
+  const [initialWebviewSrc] = useState(() => toRenderUrl(INITIAL_URL))
+
   const [webviewLoading, setWebviewLoading] = useState(false)
   const webviewRef = useRef<HTMLElement>(null)
   const listenersAttached = useRef(false)
@@ -1506,14 +1556,14 @@ export function ArcWindow({
     setHistoryIndex(idx + 1)
 
     if (isElectron) {
-      const wv = webviewRef.current as any
+      const wv = webviewRef.current as WebviewTag | null
       if (wv?.loadURL) wv.loadURL(toRenderUrl(newUrl))
     }
   }, [])
 
   const goBack = useCallback(() => {
     if (isElectron) {
-      const wv = webviewRef.current as any
+      const wv = webviewRef.current as WebviewTag | null
       if (wv?.canGoBack?.()) wv.goBack()
     }
     const idx = historyIndexRef.current
@@ -1522,7 +1572,7 @@ export function ArcWindow({
 
   const goForward = useCallback(() => {
     if (isElectron) {
-      const wv = webviewRef.current as any
+      const wv = webviewRef.current as WebviewTag | null
       if (wv?.canGoForward?.()) wv.goForward()
     }
     const idx = historyIndexRef.current
@@ -1546,7 +1596,7 @@ export function ArcWindow({
   // Attach webview event listeners (Electron only)
   useEffect(() => {
     if (!isElectron) return
-    const wv = webviewRef.current as any
+    const wv = webviewRef.current as WebviewTag | null
     if (!wv || listenersAttached.current) return
 
     const onStart = () => setWebviewLoading(true)
@@ -1555,17 +1605,18 @@ export function ArcWindow({
       wv.insertCSS('html, body { max-width: 100vw !important; overflow-x: hidden !important; }').catch(() => {})
     }
 
-    const onDidNavigate = (e: any) => {
+    const onDidNavigate = (e: Event & { url?: string }) => {
       if (!e.url || e.url === 'about:blank') return
       const idx = historyIndexRef.current
       const prev = historyRef.current
       const current = prev[idx]
-      // We load YouTube as its `/embed/` form to honor timestamps, so the
-      // webview reports that embed URL back here. Treat "navigated to the
-      // render form of where we already are" as a no-op — otherwise it
-      // pushes a phantom history entry and replaces the clean watch URL in
-      // the topbar with the ugly embed URL.
-      if (e.url === current || e.url === toRenderUrl(current)) return
+      // The webview reports its own loaded URL back here — for YouTube that's
+      // the `/embed/` form, often with params the player appends as it spins
+      // up. Treat any report that resolves to the destination we're already
+      // on as a no-op, so it can't push a phantom history entry or leak the
+      // embed URL into the topbar (which mirrors `currentUrl`, the clean
+      // watch URL). Only a genuinely different destination advances history.
+      if (isSamePlayerTarget(e.url, current)) return
       setHistory([...prev.slice(0, idx + 1), e.url])
       setHistoryIndex(idx + 1)
     }
@@ -1580,14 +1631,14 @@ export function ArcWindow({
 
   const refreshWebview = useCallback(() => {
     setWebviewLoading(true)
-    const wv = webviewRef.current as any
+    const wv = webviewRef.current as WebviewTag | null
     if (wv?.reload) wv.reload()
   }, [])
 
   const stopWebview = useCallback(() => {
     setWebviewLoading(false)
     if (isElectron) {
-      const wv = webviewRef.current as any
+      const wv = webviewRef.current as WebviewTag | null
       if (wv?.stop) wv.stop()
     }
   }, [])
@@ -1905,8 +1956,8 @@ export function ArcWindow({
               {currentUrl ? (
                 isElectron ? (
                   <webview
-                    ref={webviewRef as any}
-                    src={toRenderUrl(currentUrl)}
+                    ref={webviewRef}
+                    src={initialWebviewSrc}
                     style={{
                       position: 'absolute',
                       inset: 0,

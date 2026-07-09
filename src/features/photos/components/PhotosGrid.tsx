@@ -163,6 +163,12 @@ function PhotoTile({
    *    user wants the photos themselves to stay visible throughout the
    *    transition.
    */
+  /* Video tiles show a pre-rendered poster <img> at rest and only mount a
+   * streaming <video> on hover. This keeps the initial grid render cheap — a
+   * handful of small JPEGs instead of N decoding <video> elements — so the
+   * library appears instantly; the clip is fetched lazily only when the
+   * pointer lands on a tile. */
+  const [hovered, setHovered] = useState(false)
   return (
     <motion.div
       layout={animateLayout}
@@ -179,24 +185,51 @@ function PhotoTile({
         layout: { duration: 0.32, ease: [0.32, 0.72, 0, 1] },
       }}
       onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <img
-        src={photo.src}
-        alt={photo.alt}
-        loading="lazy"
-        /* `crossorigin="anonymous"` is required for the dock-thumbnail
-         * capture path. `useMinimizeAnimation` rasterizes the window via
-         * `html-to-image.toPng`, which paints each <img> onto an
-         * off-screen canvas. Without this attribute, cross-origin images
-         * (picsum.photos serves the seed library) taint the canvas and
-         * `canvas.toDataURL()` throws SecurityError, causing the capture
-         * to silently fail and the dock to fall back to the placeholder
-         * thumbnail. picsum.photos serves `Access-Control-Allow-Origin:
-         * *`, so opting in here is sufficient. */
-        crossOrigin="anonymous"
-        className="h-full w-full object-cover"
-        draggable={false}
-      />
+      {photo.isVideo && photo.videoSrc ? (
+        <>
+          <img
+            src={photo.poster ?? photo.src}
+            alt={photo.alt}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            draggable={false}
+          />
+          {hovered && (
+            <video
+              src={photo.videoSrc}
+              poster={photo.poster}
+              className="absolute inset-0 h-full w-full object-cover"
+              muted
+              loop
+              playsInline
+              autoPlay
+              preload="auto"
+            />
+          )}
+          {/* Consistent bottom scrim so the duration label sits on the same
+           * dark base on every clip — without it the white text reads as a
+           * different shade depending on how bright each poster frame is. */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0"
+            style={{
+              height: '38%',
+              background:
+                'linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.18) 45%, rgba(0,0,0,0) 100%)',
+            }}
+          />
+        </>
+      ) : (
+        <img
+          src={photo.src}
+          alt={photo.alt}
+          loading="lazy"
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
+      )}
 
       {photo.isVideo && photo.duration != null && (
         <div
@@ -343,7 +376,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           // an in-flow element at the end of the scrolled content rather
           // than a floating chrome strip, so the scrollbar can run all the
           // way to the bottom edge.
-          ['--photos-scrollbar-inset-top' as any]: `${topInset}px`,
+          ['--photos-scrollbar-inset-top']: `${topInset}px`,
           paddingTop: topInset + 4,
           // Horizontal insets come from `scrollbar-gutter: stable both-edges`
           // in index.css, not paddingLeft/Right — that way the gutter on the
@@ -351,7 +384,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           // by an identical empty gutter on the left, so the photo grid is
           // visually centered regardless of whether the scrollbar is
           // currently showing.
-        }}
+        } as CSSProperties}
       >
         {isEmpty && (
           <div

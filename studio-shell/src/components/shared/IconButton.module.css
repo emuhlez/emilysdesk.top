@@ -1,0 +1,109 @@
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--content-default);
+  transition: all var(--transition-fast);
+}
+
+.button img,
+.button svg {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  shape-rendering: crispEdges;
+  transition: all var(--transition-fast);
+}
+
+.button:hover:not(:disabled) {
+  color: var(--content-emphasis);
+  background: var(--content-hover);
+}
+
+.button:hover:not(:disabled) img {
+  filter: brightness(1.2);
+}
+
+.button:active:not(:disabled) {
+  background: var(--content-hover);
+}
+
+.button.active {
+  color: var(--accent-primary);
+  background: var(--content-hover);
+}
+
+.button.active:hover {
+  background: var(--content-hover);
+}
+
+/* Sizes */
+.xs {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+}
+
+.xs:hover:not(:disabled) {
+  background: var(--content-hover);
+}
+
+.xs svg,
+.xs img {
+  width: 16px;
+  height: 16px;
+}
+
+.sm {
+  width: 24px;
+  height: 24px;
+}
+
+.sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.md {
+  width: 28px;
+  height: 28px;
+}
+
+.md svg {
+  width: 16px;
+  height: 16px;
+}
+
+.lg {
+  width: 36px;
+  height: 36px;
+}
+
+.lg svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Variants */
+.ghost {
+  background: transparent;
+}
+
+.ghost:hover:not(:disabled),
+.ghost:active:not(:disabled) {
+  background: transparent;
+}
+
+.accent {
+  color: var(--accent-primary);
+}
+
+.accent:hover:not(:disabled) {
+  color: var(--accent-primary);
+  background: var(--content-hover);
+}
+
+
+
+

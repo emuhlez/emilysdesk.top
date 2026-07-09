@@ -1,0 +1,234 @@
+/* BuilderSans Font Family */
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-Thin.otf') format('opentype');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderSans';
+  src: url('/fonts/BuilderSans-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* BuilderMono Font Family */
+@font-face {
+  font-family: 'BuilderMono';
+  src: url('/fonts/builder-mono/BuilderMono-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderMono';
+  src: url('/fonts/builder-mono/BuilderMono-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BuilderMono';
+  src: url('/fonts/builder-mono/BuilderMono-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Surface colors */
+  --bg-surface0: #121215;
+  --bg-surface100: #191A1F;
+  --bg-surface200: #202227;
+  --bg-surface300: #272930;
+  /* Panel/zone background – match surface100 so panels and dock zones are consistent */
+  --bg-panel: var(--bg-surface100);
+  --bg-darkest: var(--bg-surface0);
+  --bg-surface: var(--bg-surface100);
+
+  /* Accent - blue */
+  --accent-primary: #335FFF;
+  
+  /* Content colors */
+  --content-emphasis: #F7F7F8;
+  --content-default: #D5D7DD;
+  --content-muted: #BCBEC8;
+  --content-link: #528BFF;
+  --content-hover: rgba(208, 217, 251, 0.08);
+  /** Stronger surface tint for pressed / toggled control backgrounds (ribbon, segmented controls) */
+  --content-pressed: rgba(208, 217, 251, 0.12);
+  
+  /* Semantic colors */
+  --color-success: #39C582;
+  --color-warning: #F2BA2A;
+  --color-error: #DF281F;
+  --color-emphasis: #335FFF;
+  
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(51, 95, 255, 0.3);
+  
+  /* Typography */
+  --font-sans: 'BuilderSans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'BuilderMono', 'SF Mono', Menlo, monospace;
+  
+  /* Sizing */
+  --toolbar-height: 48px;
+  --panel-header-height: 36px;
+  --scrollbar-size: 8px;
+  
+  /* Transitions */
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease-out;
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--content-emphasis);
+  background: var(--bg-surface0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface300);
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--content-hover);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Button reset */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Input reset */
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Utility classes */
+.mono {
+  font-family: var(--font-mono);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

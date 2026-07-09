@@ -379,6 +379,7 @@ export function PhotosToolbar({
   onDragStart,
   contentLeftPx,
   windowWidth,
+  hidden = false,
 }: {
   height: number
   onDragStart: (e: React.PointerEvent) => void
@@ -386,6 +387,11 @@ export function PhotosToolbar({
   contentLeftPx: number
   /** Full window width — used for responsive cluster collapse. */
   windowWidth: number
+  /** When the one-up detail view is open it floats its own command bar over the
+   *  top of the window. This toolbar sits behind that transparent bar, so fade
+   *  it out (and drop its pointer events) while detail is open — otherwise its
+   *  title plate + view tabs bleed through the detail view's top nav. */
+  hidden?: boolean
 }) {
   const viewMode = usePhotosStore((s) => s.viewMode)
   const setViewMode = usePhotosStore((s) => s.setViewMode)
@@ -463,6 +469,9 @@ export function PhotosToolbar({
         height,
         paddingRight: 20,
         cursor: 'default',
+        opacity: hidden ? 0 : 1,
+        pointerEvents: hidden ? 'none' : undefined,
+        transition: 'opacity 200ms ease',
       }}
     >
       {/* Invisible drag handle. macOS Tahoe's Photos.app toolbar has no

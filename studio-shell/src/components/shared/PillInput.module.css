@@ -1,0 +1,112 @@
+.editorWrap {
+  position: relative;
+  width: 100%;
+}
+
+.editor {
+  outline: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  cursor: text;
+  min-height: 24px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 24px;
+  color: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ghost {
+  pointer-events: none;
+  user-select: none;
+  color: var(--content-muted, #bcbec8);
+  opacity: 0.5;
+  font: inherit;
+  font-size: 12px;
+  line-height: 24px;
+  white-space: pre;
+}
+
+.ghostTab {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+  color: var(--content-muted, #bcbec8);
+  background: rgba(208, 217, 251, 0.08);
+  border: 1px solid rgba(208, 217, 251, 0.12);
+  border-radius: 4px;
+  line-height: 14px;
+  opacity: 0.7;
+  pointer-events: none;
+  user-select: none;
+}
+
+.editor[data-empty='true']::before {
+  content: attr(data-placeholder);
+  color: var(--content-muted, #bcbec8);
+  pointer-events: none;
+}
+
+/* Pills support kinds via data-pill-kind: object | asset | assetType | collaborator */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  height: 20px;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--content-default);
+  padding: 0 6px;
+  background: rgba(208, 217, 251, 0.12);
+  border-radius: var(--radius-sm, 6px);
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  user-select: all;
+  margin: 0 3px;
+  line-height: 20px;
+  outline: none;
+  box-shadow: none;
+}
+
+.pill::selection,
+.pill *::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.pill:focus,
+.pill:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Highlight only when keyed over (caret adjacent via keyboard) — not on hover or click focus */
+.pill[data-keyed="true"] {
+  background: var(--content-pressed);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+.pill svg {
+  flex-shrink: 0;
+  color: var(--content-muted);
+}
+
+.pillLabel {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.slashCommand {
+  color: var(--content-emphasis);
+  font-weight: 600;
+}

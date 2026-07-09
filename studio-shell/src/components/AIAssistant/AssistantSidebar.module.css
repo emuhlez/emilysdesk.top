@@ -1,0 +1,360 @@
+.sideNavWrap {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+  height: 100%;
+  background: var(--bg-surface100);
+  border-right: none;
+}
+
+/* ---------- New Chat button ---------- */
+
+.newChatArea {
+  padding: 12px 12px 8px;
+  flex-shrink: 0;
+}
+
+.newChatButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--content-emphasis);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.newChatButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-subtle);
+}
+
+.newChatButton:focus-visible {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.newChatButton > svg {
+  flex-shrink: 0;
+  color: var(--content-emphasis);
+}
+
+/* ---------- Nav container ---------- */
+
+.sideNav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 0 12px;
+  background-color: rgba(25, 26, 31, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ---------- Status bucket rows ---------- */
+
+.statusGroup {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 4px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease;
+  min-width: 0;
+}
+
+.statusRow[data-disabled='true'] {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.statusRow:not([data-disabled='true']):hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.statusRow:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.statusRowLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--content-emphasis);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.statusRowTrailing {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--content-muted);
+}
+
+.statusIcon {
+  color: var(--content-muted);
+}
+
+.statusIconSpin {
+  color: var(--content-emphasis);
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Pill badge for "Awaiting Approval" */
+.awaitingPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--content-emphasis);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Items revealed when a status bucket is expanded */
+.statusBucketItems {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0 4px 28px;
+}
+
+.bucketTaskRow {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  padding: 2px 12px 2px 8px;
+  border-radius: 4px;
+  margin: 0 4px;
+  min-width: 0;
+}
+
+.bucketTaskRow:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bucketTaskName {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--content-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ---------- Divider ---------- */
+
+.sectionDivider {
+  height: 1px;
+  margin: 8px 12px;
+  background: var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* ---------- Recents section ---------- */
+
+.recentsHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--content-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  user-select: none;
+}
+
+.planChevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--content-muted);
+  transition: transform 0.15s ease;
+}
+
+.planChevronOpen {
+  transform: rotate(90deg);
+}
+
+.recentRow {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-radius: 6px;
+  margin: 0 8px;
+  min-width: 0;
+}
+
+.recentRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.recentRowActive {
+  background: rgba(60, 100, 250, 0.12);
+}
+
+.recentRowActive:hover {
+  background: rgba(60, 100, 250, 0.18);
+}
+
+.recentName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--content-emphasis);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.recentRowEmpty {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--content-muted);
+  opacity: 0.7;
+}
+
+/* ---------- Plan section ---------- */
+
+.planStepRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 2px 8px 2px 16px;
+  margin: 0 4px;
+  min-width: 0;
+}
+
+.planStepDot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.statusRunning {
+  background: var(--accent-primary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.statusPending {
+  background: var(--color-warning);
+}
+
+.statusCompleted {
+  background: var(--color-success);
+}
+
+.statusFailed {
+  background: var(--color-error);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.planStepLabel {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--content-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.planStepDone {
+  color: var(--content-default);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.planStepExecuting {
+  color: var(--accent-primary);
+}
+
+/* ---------- Resize handle ---------- */
+
+.sideNavResizeHandle {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  background: transparent;
+  touch-action: none;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.sideNavResizeHandle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-subtle);
+  transition: background 0.12s ease;
+}
+
+.sideNavResizeHandle:hover::after,
+.sideNavResizeHandle:active::after {
+  background: var(--accent-primary);
+}
+
+/* During narrow-panel takeover the sidenav fills the entire assistant panel,
+   so its right-edge resize handle has nothing to resize against — hide it. */
+@container assistant-body (max-width: 420px) {
+  .sideNavResizeHandle {
+    display: none;
+  }
+}

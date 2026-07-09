@@ -1,0 +1,157 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.dialog {
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--content-emphasis);
+  margin: 0;
+  padding: 16px 24px 8px;
+}
+
+.subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--content-muted);
+  margin: 0;
+  padding: 0 24px 8px;
+}
+
+.folderList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+  max-height: 400px;
+  padding: 8px;
+  margin: 8px 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.folderItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 12px;
+  min-height: 24px;
+  max-height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  color: var(--content-emphasis);
+  text-align: left;
+}
+
+.folderItem:hover {
+  background: rgba(208, 217, 251, 0.08);
+}
+
+.folderItemSelected {
+  background: rgba(60, 100, 250, 0.12);
+}
+
+.folderItemSelected:hover {
+  background: rgba(60, 100, 250, 0.16);
+}
+
+.folderIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--content-link);
+}
+
+.folderName {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--content-emphasis);
+  line-height: 140%;
+}
+
+.folderChevron {
+  flex-shrink: 0;
+  color: var(--content-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 24px 16px;
+  font-size: 12px;
+}
+
+.cancelButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  width: 54px;
+  height: 24px;
+  background: rgba(208, 217, 251, 0.12);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--content-emphasis);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelButton:hover {
+  background: rgba(208, 217, 251, 0.08);
+}
+
+.moveButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  width: 47px;
+  height: 24px;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.moveButton:hover:not(:disabled) {
+  background: var(--accent-light);
+}
+
+.moveButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

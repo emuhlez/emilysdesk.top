@@ -1,0 +1,154 @@
+.dockablePanel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg-surface100);
+  overflow: hidden;
+}
+
+.dockablePanel.inTabbedPanel {
+  /* When in tabbed panel, no header needed */
+}
+
+.draggableHeader {
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.dockablePanel.collapsedAsTab {
+  flex: 0 0 auto;
+  align-items: flex-start;
+}
+
+.dockablePanel.collapsedAsTab .draggableHeader {
+  width: fit-content;
+}
+
+.draggableHeader.collapsedHeader {
+  cursor: pointer;
+  align-self: flex-start;
+  padding: 0 8px;
+  height: 32px;
+  margin: 4px 0 0 8px;
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.draggableHeader.collapsedHeader:hover {
+  background: var(--bg-surface150);
+}
+
+.draggableHeader.collapsedHeader > div {
+  background: transparent;
+  border-bottom: none;
+  padding: 0;
+  height: 100%;
+}
+
+.collapseButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--content-muted);
+  cursor: pointer;
+}
+
+.collapseButton:hover {
+  color: var(--content-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.draggableHeader button,
+.draggableHeader input,
+.draggableHeader a,
+.draggableHeader [role="button"] {
+  cursor: pointer;
+}
+
+.draggableHeader.dragging {
+  cursor: grabbing;
+  opacity: 0.5;
+}
+
+.draggableHeader:active {
+  cursor: grabbing;
+}
+
+.panelContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-surface100);
+}
+
+.panelContent.panelContentCollapsed {
+  display: none;
+}
+
+.panelContent.panelContentMinimal {
+  flex: 0 0 auto;
+  height: auto;
+  overflow: visible;
+}
+
+.panelContent.panelContentFills {
+  height: auto;
+  max-height: none;
+}
+
+.headerMiddleRow {
+  flex-shrink: 0;
+  background: var(--bg-surface100);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dockablePanel.dragging {
+  opacity: 0.3;
+}
+
+.dragPreview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10001;
+  transform: translate(-50%, -50%);
+  max-width: 400px;
+  max-height: 500px;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.dragPreviewContent {
+  background: var(--bg-surface200);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  opacity: 0.95;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dragPreviewBody {
+  max-height: 300px;
+  overflow: auto;
+  background: var(--bg-surface100);
+  padding: 8px;
+}
+
+/* Note: dragOver class is defined in DockLayout.module.css */
+

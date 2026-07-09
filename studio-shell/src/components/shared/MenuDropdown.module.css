@@ -1,0 +1,106 @@
+.menuDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 1000;
+}
+
+.menuDropdown svg {
+  width: 12px;
+  height: 12px;
+}
+
+.menuItemWrapper {
+  position: relative;
+}
+
+.dropdownItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 4px 12px;
+  min-height: 24px;
+  text-align: left;
+  font-size: 13px;
+  color: var(--content-default);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.dropdownItem > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.dropdownItem:focus-visible {
+  outline: none;
+}
+
+.dropdownItemStickyFooter {
+  position: sticky;
+  bottom: -4px; /* account for menu padding */
+  background: var(--bg-surface200);
+}
+
+.dropdownItemStickyFooter:hover,
+.dropdownItemStickyFooter:active {
+  background: rgba(208, 217, 251, 0.12);
+}
+
+.dropdownItem:hover {
+  background: rgba(208, 217, 251, 0.12);
+  color: var(--content-emphasis);
+}
+
+.dropdownItem:active {
+  background: rgba(208, 217, 251, 0.12);
+  color: var(--content-emphasis);
+}
+
+.shortcutGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcut {
+  font-size: 12px;
+  opacity: 0.6;
+  font-family: var(--font-mono, monospace);
+}
+
+.submenu {
+  position: absolute;
+  left: calc(100% - 4px);
+  top: 0;
+  min-width: 200px;
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+  z-index: 1001;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 4px 0;
+}
+

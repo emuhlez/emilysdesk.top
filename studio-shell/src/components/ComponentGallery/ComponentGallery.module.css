@@ -1,0 +1,333 @@
+.gallery {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* Search Bar */
+.searchBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-panel);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.searchInput:focus {
+  border-color: var(--accent-primary);
+  background: var(--bg-dark);
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+/* Stats */
+.statsSimple {
+  display: flex;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bg-panel);
+}
+
+.statText {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Component List */
+.componentList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Category */
+.category {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+}
+
+.categoryHeader:hover {
+  background: var(--bg-surface);
+}
+
+.categoryTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.categoryName {
+  color: var(--text-primary);
+}
+
+.categoryCount {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Grid View */
+.componentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+/* Component Card */
+.componentCard {
+  background: var(--bg-surface);
+  border: 2px solid var(--bg-panel);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.componentCard:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.previewContainer {
+  padding: 24px;
+  background: var(--bg-dark);
+  border-bottom: 2px solid var(--bg-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.componentInfo {
+  padding: 12px;
+}
+
+.componentName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.componentDescription {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Detail Modal */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+.detailModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background: var(--bg-dark);
+  border: 2px solid var(--accent-primary);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+  background: var(--bg-surface);
+  border-bottom: 2px solid var(--bg-panel);
+  gap: 16px;
+}
+
+.detailHeader h3 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.detailDescription {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+.detailBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.previewSection,
+.variantsSection,
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.previewBox,
+.variantPreviewBox {
+  padding: 32px;
+  background: var(--bg-darkest);
+  border: 2px solid var(--bg-panel);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.variantTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.variantTab {
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-panel);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.variantTab:hover {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+
+.variantTab.active {
+  background: var(--accent-primary);
+  color: var(--bg-darkest);
+  border-color: var(--accent-primary);
+}
+
+.locationCode {
+  display: block;
+  font-size: 12px;
+  color: var(--accent-secondary);
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  background: var(--bg-darkest);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--bg-panel);
+  overflow-x: auto;
+}
+
+/* Scrollbar */
+.componentList::-webkit-scrollbar,
+.detailContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.componentList::-webkit-scrollbar-track,
+.detailContent::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+  border-radius: 4px;
+}
+
+.componentList::-webkit-scrollbar-thumb,
+.detailContent::-webkit-scrollbar-thumb {
+  background: var(--bg-surface);
+  border-radius: 4px;
+}
+
+.componentList::-webkit-scrollbar-thumb:hover,
+.detailContent::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-panel);
+}

@@ -68,11 +68,14 @@ export default defineConfig(async () => {
                 json(data: unknown) { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(data)) },
                 send(data: string) { res.end(data) },
               }
-              handler(fakeReq as any, fakeRes as any)
+              handler(
+                fakeReq as unknown as Parameters<typeof handler>[0],
+                fakeRes as unknown as Parameters<typeof handler>[1],
+              )
             })
-          } catch (e: any) {
+          } catch (e) {
             res.statusCode = 500
-            res.end(JSON.stringify({ error: e.message }))
+            res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }))
           }
         })
       },
@@ -90,6 +93,13 @@ export default defineConfig(async () => {
       // the wrong project.
       port: 5180,
       strictPort: true,
+      // Bind to IPv4 explicitly. With `host` unset, Vite picks one stack
+      // non-deterministically and on macOS it has shipped IPv6-only
+      // (`[::1]:5180`) builds; browsers resolve `localhost` → `127.0.0.1`
+      // first and don't always retry the AAAA record, so the page just
+      // refuses to load even though `curl http://[::1]:5180/` works. Pinning
+      // to '127.0.0.1' matches what the browser actually dials.
+      host: '127.0.0.1',
     },
   }
 })

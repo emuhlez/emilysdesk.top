@@ -63,6 +63,7 @@ export function PhotosSidebarHeader({
   onToggleSidebar,
   sidebarCollapsed,
   sidebarWidth,
+  detailOpen = false,
 }: {
   onDragStart: (e: ReactPointerEvent) => void
   onClose?: () => void
@@ -71,6 +72,12 @@ export function PhotosSidebarHeader({
   onToggleSidebar: () => void
   sidebarCollapsed: boolean
   sidebarWidth: number
+  /** When the one-up detail view is open, drop the full-bleed window-drag
+   *  overlay to pointer-events:none so the detail's command bar (Back button,
+   *  zoom slider) — which renders one z-layer below this header — receives
+   *  clicks. The traffic lights + toggle keep their own pointer-events:auto
+   *  containers, so they stay live above the detail. */
+  detailOpen?: boolean
 }) {
   /**
    * When the sidebar is visible, anchor the toggle button to the inside-right of the
@@ -109,8 +116,8 @@ export function PhotosSidebarHeader({
       }}
     >
       <div
-        className="pointer-events-auto absolute inset-0"
-        style={{ zIndex: 0 }}
+        className="absolute inset-0"
+        style={{ zIndex: 0, pointerEvents: detailOpen ? 'none' : 'auto' }}
         onPointerDown={onDragStart}
       />
 

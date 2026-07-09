@@ -1,0 +1,539 @@
+/* Scoped layout tokens — derived from ribbon spec */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.root {
+  --ribbon-menu-bar-height: 24px;
+  --ribbon-mezzanine-height: 36px;
+  --ribbon-content-height: 72px;
+  --ribbon-menu-bar-pad-inline: 8px;
+  --ribbon-menu-bar-pad-block: 2px;
+  --ribbon-menu-gap: 4px;
+  --ribbon-menu-item-pad-inline: 8px;
+  --ribbon-menu-font-size: 12px;
+  --ribbon-mezzanine-pad-inline: 8px;
+  --ribbon-test-select-width: 85px;
+  --ribbon-mezzanine-control-size: 24px;
+  --ribbon-tab-width: 80px;
+  --ribbon-tab-pad-block: 6px;
+  --ribbon-user-pad-inline: 8px;
+  --ribbon-avatar-size: 24px;
+  --ribbon-overflow-badge-min-width: 18px;
+  --ribbon-overflow-badge-height: 16px;
+  --ribbon-divider-horizontal: 1px;
+  --ribbon-content-pad-inline: 8px;
+  --ribbon-group-gap: 4px;
+  --ribbon-toggle-col-width: 60px;
+  --ribbon-stack-gap: 2px;
+  --ribbon-label-height: 16px;
+  --ribbon-stack-height: calc(
+    var(--ribbon-icon-btn-size) + var(--ribbon-stack-gap) + var(--ribbon-label-height)
+  );
+  --ribbon-icon-btn-size: 40px;
+  --ribbon-split-dropdown-width: 20px;
+  --ribbon-font-size-caption: 12px;
+  --ribbon-icon-ribbon-size: 24px;
+  --ribbon-icon-small: 16px;
+  --ribbon-icon-chevron: 12px;
+  /* Mezzanine test control background (matches Figma) */
+  --ribbon-mezzanine-input-bg: rgba(187, 194, 209, 0.12);
+
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface100);
+  border-bottom: var(--ribbon-divider-horizontal) solid var(--border-subtle);
+}
+
+.menuBar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ribbon-menu-gap);
+  height: var(--ribbon-menu-bar-height);
+  padding: var(--ribbon-menu-bar-pad-block) var(--ribbon-menu-bar-pad-inline);
+  box-sizing: border-box;
+}
+
+.menuItem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 var(--ribbon-menu-item-pad-inline);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--ribbon-menu-font-size);
+  font-weight: 400;
+  color: var(--content-default);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.menuItem:hover {
+  background: var(--content-hover);
+}
+
+.mezzanine {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: var(--ribbon-mezzanine-height);
+  padding: 0 var(--ribbon-mezzanine-pad-inline);
+  box-sizing: border-box;
+}
+
+.mezzanineLeft {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ribbon-group-gap);
+  z-index: 1;
+}
+
+.testSelectWrapper {
+  position: relative;
+  width: var(--ribbon-test-select-width);
+  height: var(--ribbon-mezzanine-control-size);
+}
+
+.testSelect {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 0 28px 0 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--ribbon-mezzanine-input-bg);
+  color: var(--content-default);
+  font-family: inherit;
+  font-size: var(--ribbon-font-size-caption);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.testSelect:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}
+
+.testSelectChevronIcon {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  color: var(--content-muted);
+}
+
+.playbackButtons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+}
+
+.iconBtn24 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ribbon-mezzanine-control-size);
+  height: var(--ribbon-mezzanine-control-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--content-default);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.iconBtn24:hover {
+  background: var(--content-hover);
+}
+
+.iconBtn24:active {
+  background: var(--content-pressed);
+}
+
+/* Static Nebula AI Assistant toggle in the userRail. Mirrors the
+   pressed-state visual of .iconBtnRibbon[data-active='true'] so the
+   "panel is open" cue is consistent across ribbon icon buttons.
+   No animations applied — the launcher icon must sit still; rotation /
+   glow are reserved for the status-indicator + task-pill Nebulas
+   elsewhere in the AI Assistant. */
+.nebulaToggleActive {
+  background: var(--content-pressed);
+}
+
+.nebulaToggleIcon {
+  display: block;
+  width: var(--ribbon-mezzanine-icon-size, 16px);
+  height: var(--ribbon-mezzanine-icon-size, 16px);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.tabsRail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tabsRailInner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ribbon-group-gap);
+  pointer-events: auto;
+}
+
+.tab {
+  box-sizing: border-box;
+  min-width: var(--ribbon-tab-width);
+  width: var(--ribbon-tab-width);
+  padding: var(--ribbon-tab-pad-block) 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--ribbon-font-size-caption);
+  font-weight: 400;
+  color: var(--content-default);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.tab[data-selected='true'] {
+  background: var(--content-pressed);
+  color: var(--content-emphasis);
+}
+
+.tabPlus {
+  min-width: var(--ribbon-mezzanine-control-size);
+  width: var(--ribbon-mezzanine-control-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ribbon-tab-pad-block) 0;
+}
+
+.tab:hover:not([data-selected='true']) {
+  background: var(--content-hover);
+}
+
+.userRail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--ribbon-user-pad-inline);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  z-index: 1;
+}
+
+.userDivider {
+  width: var(--ribbon-divider-horizontal);
+  align-self: stretch;
+  margin: 6px 0;
+  background: var(--border-subtle);
+}
+
+.avatarWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.avatarCircle {
+  width: var(--ribbon-avatar-size);
+  height: var(--ribbon-avatar-size);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent-primary) 85%, white 15%);
+}
+
+.overflowBadge {
+  position: absolute;
+  bottom: -2px;
+  right: -6px;
+  min-width: var(--ribbon-overflow-badge-min-width);
+  height: var(--ribbon-overflow-badge-height);
+  padding: 0 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-subtle);
+  font-size: 10px;
+  line-height: var(--ribbon-overflow-badge-height);
+  text-align: center;
+  color: var(--content-muted);
+}
+
+.moreRotate {
+  transform: rotate(-90deg);
+}
+
+.rowDivider {
+  height: var(--ribbon-divider-horizontal);
+  flex-shrink: 0;
+  background: var(--border-subtle);
+}
+
+.ribbonContent {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  box-sizing: border-box;
+  min-height: var(--ribbon-content-height);
+  height: var(--ribbon-content-height);
+  padding-block: calc(
+    (var(--ribbon-content-height) - var(--ribbon-stack-height)) / 2
+  );
+  padding-inline: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ribbonContent::-webkit-scrollbar {
+  display: none;
+}
+
+.toolGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ribbon-group-gap);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.groupDivider {
+  align-self: stretch;
+  width: var(--ribbon-divider-horizontal);
+  flex-shrink: 0;
+  background: var(--border-subtle);
+  margin-inline: calc(var(--ribbon-group-gap) / 2);
+}
+
+.toggleWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ribbon-stack-gap);
+  width: var(--ribbon-toggle-col-width);
+}
+
+.iconBtnRibbon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ribbon-icon-btn-size);
+  height: var(--ribbon-icon-btn-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--content-default);
+  cursor: pointer;
+}
+
+/* Pressed state snaps instantly; hover uses a short ease on non-active buttons */
+.iconBtnRibbon:not([data-active='true']) {
+  transition: background var(--transition-fast);
+}
+
+.iconBtnRibbon:hover {
+  background: var(--content-hover);
+}
+
+.iconBtnRibbon:active {
+  background: var(--content-pressed);
+}
+
+.iconBtnRibbon[data-active='true'] {
+  background: var(--content-pressed);
+  transition: none;
+}
+
+/* Studio-shell: manipulators not backed by editor state stay visible but inert. */
+.iconBtnRibbon:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.iconBtnRibbon:disabled:hover,
+.iconBtnRibbon:disabled:active {
+  background: transparent;
+}
+
+.iconBtnRibbon svg {
+  flex-shrink: 0;
+}
+
+.toggleLabel {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: var(--ribbon-label-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ribbon-font-size-caption);
+  font-weight: 400;
+  line-height: var(--ribbon-label-height);
+  text-align: center;
+  color: var(--content-default);
+}
+
+.splitWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ribbon-stack-gap);
+  width: var(--ribbon-toggle-col-width);
+}
+
+.splitTop {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.splitMainBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ribbon-icon-btn-size);
+  height: var(--ribbon-icon-btn-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--content-default);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.splitDropBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--ribbon-split-dropdown-width);
+  min-height: var(--ribbon-icon-btn-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--content-muted);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.splitMainBtn:hover,
+.splitDropBtn:hover {
+  background: var(--content-hover);
+}
+
+.splitMainBtn:active,
+.splitDropBtn:active {
+  background: var(--content-pressed);
+}
+
+.splitLabel {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: var(--ribbon-label-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ribbon-font-size-caption);
+  line-height: var(--ribbon-label-height);
+  text-align: center;
+  color: var(--content-default);
+}
+
+/* ── Spinbox pair (Geometric group) ─────────────────────────────────────── */
+
+.spinboxPairWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-left: 4px;
+}
+
+.spinboxRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+
+.spinboxImg {
+  display: block;
+  height: 20px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.ribbonCheckbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.ribbonCheckbox:hover {
+  border-color: var(--border-strong);
+  background: var(--content-hover);
+}
+
+.ribbonCheckbox:checked {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+.ribbonCheckbox:checked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23121215' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 10px;
+}
+
+.ribbonCheckbox:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}

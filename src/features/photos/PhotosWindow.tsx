@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../../stores/app-store'
+import { usePhotosStore } from '../../stores/photos-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
 import { PhotosSidebar } from './components/PhotosSidebar'
@@ -9,6 +10,7 @@ import {
 } from './components/PhotosSidebarHeader'
 import { PhotosToolbar } from './components/PhotosToolbar'
 import { PhotosGrid } from './components/PhotosGrid'
+import { PhotoDetail } from './components/PhotoDetail'
 import { LiquidGlassDefs } from './components/LiquidGlassDefs'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
 import {
@@ -42,6 +44,16 @@ const SIDEBAR_FLOAT_INSET_LEFT = 10
 const SIDEBAR_FLOAT_INSET_TOP = 10
 const SIDEBAR_FLOAT_INSET_BOTTOM = 10
 const SIDEBAR_FLOAT_GAP = 6
+
+/* Single source of truth for the sidebar show/hide motion so every surface it
+ * affects — the sidebar's own slide, the content inset, the frosted toolbar
+ * band, the floating toolbar, and the detail view's left edge — animate on the
+ * exact same curve and duration. Coordinating them removes the previous jank
+ * where the sidebar popped in/out instantly while only the content padding
+ * eased. cubic-bezier(0.32,0.72,0,1) is Apple's standard "gentle" decel curve. */
+const SIDEBAR_ANIM_MS = 380
+const SIDEBAR_ANIM_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)'
+const SIDEBAR_TRANSITION = `transform ${SIDEBAR_ANIM_MS}ms ${SIDEBAR_ANIM_EASE}, opacity ${SIDEBAR_ANIM_MS}ms ${SIDEBAR_ANIM_EASE}`
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -154,6 +166,14 @@ export function PhotosWindow({
 
   const closeApp = useAppStore((s) => s.closeApp)
   const setFullscreenApp = useAppStore((s) => s.setFullscreenApp)
+  /* When the one-up detail view is open it covers the grid at z-25, but the
+   * sidebar header (z-30) — including its full-bleed window-drag overlay —
+   * still sits above it. That overlay would otherwise intercept clicks on the
+   * detail's command bar (Back button, zoom). We pass this down so the header
+   * can drop the drag overlay to pointer-events:none while detail is open;
+   * the traffic lights + toggle keep their own pointer-events so they stay
+   * live. */
+  const detailOpen = usePhotosStore((s) => s.selectedPhotoId != null)
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT)
@@ -298,6 +318,17 @@ export function PhotosWindow({
   }, [dragging])
 
   const effectiveSidebarWidth = sidebarCollapsed ? 0 : sidebarWidth
+  /* Left edge of the content zone (grid + detail view), i.e. just past the
+   * floating sidebar when it's open. Animated via the shared sidebar curve. */
+  const contentLeftInset =
+    effectiveSidebarWidth > 0
+      ? SIDEBAR_FLOAT_INSET_LEFT + effectiveSidebarWidth + SIDEBAR_FLOAT_GAP
+      : 0
+  /* Inner left padding for the detail command bar: when the sidebar is open
+   * the traffic lights / toggle sit over the sidebar (left of the inset detail
+   * view), so the bar only needs a small gutter; when collapsed the bar must
+   * clear the traffic-lights + toggle zone itself. */
+  const detailBarPadLeft = effectiveSidebarWidth > 0 ? 16 : COLLAPSED_HEADER_ZONE_WIDTH
 
   return (
     <div
@@ -344,44 +375,51 @@ export function PhotosWindow({
         <div
           className="flex min-h-0 min-w-0 flex-1 flex-col"
           style={{
-            paddingLeft:
-              effectiveSidebarWidth > 0
-                ? SIDEBAR_FLOAT_INSET_LEFT + effectiveSidebarWidth + SIDEBAR_FLOAT_GAP
-                : 0,
-            transition: 'padding-left 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            paddingLeft: contentLeftInset,
+            /* Fade the grid out while the one-up detail view is open. The detail
+             * layer has a transparent background (so it shows the same single
+             * window fill as the grid's empty areas); hiding the grid keeps
+             * photos from bleeding through that transparent layer. */
+            opacity: detailOpen ? 0 : 1,
+            pointerEvents: detailOpen ? 'none' : undefined,
+            transition: `padding-left ${SIDEBAR_ANIM_MS}ms ${SIDEBAR_ANIM_EASE}, opacity 200ms ease`,
             background: 'transparent',
           }}
         >
           <PhotosGrid topInset={TOOLBAR_H} />
         </div>
 
-        {effectiveSidebarWidth > 0 && (
-          <div
-            className="absolute"
-            style={{
-              left: SIDEBAR_FLOAT_INSET_LEFT,
-              top: SIDEBAR_FLOAT_INSET_TOP,
-              bottom: SIDEBAR_FLOAT_INSET_BOTTOM,
-              width: effectiveSidebarWidth,
-              transition: 'width 280ms cubic-bezier(0.32, 0.72, 0, 1)',
-              // z-16 sits one notch above the frost top bar (z-15) so that
-              // during the collapse→expand slide — where the sidebar mounts
-              // instantly at full width but the frost's `left` animates over
-              // 280 ms toward the sidebar's right edge — the sidebar's top
-              // is not transiently tinted by the frost's backdrop blur. In
-              // the resting expanded state the two never overlap (frost
-              // starts at sidebar.right + 6 px), so this only matters
-              // during the slide.
-              zIndex: 16,
-            }}
-          >
-            <PhotosSidebar
-              width={effectiveSidebarWidth}
-              topContentInset={TOOLBAR_H - SIDEBAR_FLOAT_INSET_TOP}
-              onResizeStart={startSidebarResize}
-            />
-          </div>
-        )}
+        {/* Sidebar is always mounted and slides/fades in and out via transform
+            rather than mounting at full width on every open. Sliding it off the
+            left edge (and fading) in lockstep with the content inset is what
+            makes the show/hide feel smooth instead of popping. When collapsed
+            it's pushed fully past the left edge and made non-interactive.
+            Keeping a constant `width` (not animating it) means the sidebar's
+            internal layout never reflows mid-animation — only its transform
+            moves, which the compositor can run cheaply. */}
+        <div
+          className="absolute"
+          style={{
+            left: SIDEBAR_FLOAT_INSET_LEFT,
+            top: SIDEBAR_FLOAT_INSET_TOP,
+            bottom: SIDEBAR_FLOAT_INSET_BOTTOM,
+            width: sidebarWidth,
+            transform: sidebarCollapsed
+              ? `translateX(${-(SIDEBAR_FLOAT_INSET_LEFT + sidebarWidth + 12)}px)`
+              : 'translateX(0)',
+            opacity: sidebarCollapsed ? 0 : 1,
+            pointerEvents: sidebarCollapsed ? 'none' : 'auto',
+            transition: SIDEBAR_TRANSITION,
+            willChange: 'transform, opacity',
+            zIndex: 16,
+          }}
+        >
+          <PhotosSidebar
+            width={sidebarWidth}
+            topContentInset={TOOLBAR_H - SIDEBAR_FLOAT_INSET_TOP}
+            onResizeStart={startSidebarResize}
+          />
+        </div>
 
         {/* Frosted top backing strip. Anchors the toolbar's chip clusters on
             a continuous translucent band so they don't read as floating on
@@ -400,10 +438,7 @@ export function PhotosWindow({
           className="pointer-events-none absolute"
           style={{
             top: 0,
-            left:
-              effectiveSidebarWidth > 0
-                ? SIDEBAR_FLOAT_INSET_LEFT + effectiveSidebarWidth + SIDEBAR_FLOAT_GAP
-                : 0,
+            left: contentLeftInset,
             right: 0,
             height: TOOLBAR_H,
             zIndex: 15,
@@ -417,7 +452,7 @@ export function PhotosWindow({
             WebkitMaskImage:
               'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) calc(100% - 32px), rgba(0,0,0,0.7) calc(100% - 12px), rgba(0,0,0,0) 100%), linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 12px, rgba(0,0,0,1) 32px, rgba(0,0,0,1) 100%), linear-gradient(to left, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 12px, rgba(0,0,0,1) 32px, rgba(0,0,0,1) 100%)',
             WebkitMaskComposite: 'source-in',
-            transition: 'left 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+            transition: `left ${SIDEBAR_ANIM_MS}ms ${SIDEBAR_ANIM_EASE}`,
           }}
         />
 
@@ -429,17 +464,17 @@ export function PhotosWindow({
           onToggleSidebar={toggleSidebar}
           sidebarCollapsed={sidebarCollapsed}
           sidebarWidth={effectiveSidebarWidth}
+          detailOpen={detailOpen}
         />
 
         <PhotosToolbar
           height={TOOLBAR_H}
           onDragStart={(e) => startDrag('move', e)}
           contentLeftPx={
-            effectiveSidebarWidth > 0
-              ? SIDEBAR_FLOAT_INSET_LEFT + effectiveSidebarWidth + SIDEBAR_FLOAT_GAP
-              : COLLAPSED_HEADER_ZONE_WIDTH
+            effectiveSidebarWidth > 0 ? contentLeftInset : COLLAPSED_HEADER_ZONE_WIDTH
           }
           windowWidth={rect.w}
+          hidden={detailOpen}
         />
 
         {/* Inner border overlay. Mirrors NotesWindow's chrome rim so the
@@ -457,6 +492,15 @@ export function PhotosWindow({
             boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.22)',
           }}
         />
+
+        {/* One-up focused view for the selected photo/video. Rendered last so
+            it stacks above the grid and toolbar, and inside the overflow-hidden
+            inner container so it's clipped to the window's rounded corners. Its
+            left edge insets to clear the floating sidebar (animated on the same
+            curve) so the sidebar can be opened while a photo/video is focused.
+            The traffic lights + sidebar toggle sit over the sidebar zone to the
+            left of this inset, so they stay usable without colliding. */}
+        <PhotoDetail leftInset={contentLeftInset} barPadLeft={detailBarPadLeft} />
       </div>
 
       {!fullscreen &&

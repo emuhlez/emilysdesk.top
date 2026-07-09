@@ -1,0 +1,229 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface100);
+}
+
+.content {
+  flex: 1;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--content-default);
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+/* Dropdown */
+.dropdown {
+  position: relative;
+  margin: 0 8px;
+}
+
+.dropdownButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: rgba(208, 217, 251, 0.04);
+  border: none;
+  border-radius: 6px;
+  color: var(--content-emphasis);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none !important;
+}
+
+.dropdownButton:hover {
+  background: rgba(208, 217, 251, 0.08);
+}
+
+.dropdownButton:focus {
+  outline: none !important;
+}
+
+.dropdownButton:focus-visible {
+  outline: none !important;
+}
+
+.dropdownButton:active {
+  outline: none !important;
+}
+
+.dropdownIcon {
+  opacity: 0.6;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-surface200);
+  border: 1px solid rgba(208, 217, 251, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--content-emphasis);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.dropdownItem:hover {
+  background: var(--content-hover);
+}
+
+.dropdownItem.selected {
+  background: rgba(208, 217, 251, 0.16);
+  color: var(--content-emphasis);
+}
+
+/* Radio Group */
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  user-select: none;
+}
+
+.radioLabel:hover {
+  background: var(--content-hover);
+}
+
+.radioLabel.selected {
+  background: transparent;
+}
+
+.radioInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radioCircle {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(208, 217, 251, 0.3);
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.radioLabel:hover .radioCircle {
+  border-color: rgba(208, 217, 251, 0.5);
+}
+
+.radioInput:checked + .radioCircle {
+  border-color: rgba(208, 217, 251, 0.6);
+  background: rgba(208, 217, 251, 0.6);
+}
+
+.radioInput:checked + .radioCircle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  background: white;
+  border-radius: 50%;
+}
+
+.radioText {
+  font-size: 13px;
+  color: var(--content-emphasis);
+  flex: 1;
+}
+
+/* Actions */
+.actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  padding: 12px 6px;
+  background: var(--bg-surface100);
+  border-top: 1px solid rgba(208, 217, 251, 0.12);
+  flex-shrink: 0;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 8px 12px;
+  background: rgba(208, 217, 251, 0.12);
+  border: none;
+  border-radius: 6px;
+  color: var(--content-emphasis);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelButton:hover {
+  background: rgba(208, 217, 251, 0.2);
+}
+
+.searchButton {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.searchButton:hover {
+  background: var(--accent-primary);
+  opacity: 0.9;
+}
+
+.searchButton:active {
+  background: var(--accent-primary);
+  opacity: 0.8;
+}

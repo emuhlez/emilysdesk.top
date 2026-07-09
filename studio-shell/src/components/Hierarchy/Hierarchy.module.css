@@ -1,0 +1,191 @@
+.tree {
+  padding: 8px 0;
+}
+
+.treeNode {
+  user-select: none;
+}
+
+.workspaceGroup {
+  position: relative;
+}
+
+/* Vertical line for any node with children (Workspace, Drops, nested groups, etc.) */
+.hasChildrenGroup {
+  position: relative;
+}
+
+.hasChildrenGroup::before {
+  content: '';
+  position: absolute;
+  left: var(--tree-line-left, 16px);
+  top: 28px;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.nodeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 2px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-radius: 4px;
+}
+
+.nodeRow:hover {
+  background: var(--content-hover);
+}
+
+.nodeRow.selected {
+  background: var(--content-hover);
+}
+
+.nodeRow.selected:hover {
+  background: var(--content-hover);
+}
+
+/* Selected parent (has children): accent tint at 16% */
+.nodeRow.selectedParent {
+  background: rgba(60, 100, 250, 0.16);
+}
+
+.nodeRow.selectedParent:hover {
+  background: rgba(60, 100, 250, 0.16);
+}
+
+/* Selected child (no children): accent tint at 8% */
+.nodeRow.selectedChild {
+  background: rgba(60, 100, 250, 0.08);
+}
+
+.nodeRow.selectedChild:hover {
+  background: rgba(60, 100, 250, 0.08);
+}
+
+.expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--content-muted);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.expandBtn:hover {
+  color: var(--content-muted);
+}
+
+.expandBtn.hidden {
+  visibility: hidden;
+}
+
+.typeIcon {
+  display: flex;
+  align-items: center;
+  color: var(--content-link);
+  flex-shrink: 0;
+}
+
+.name {
+  flex: 1;
+  font-size: 14px;
+  color: var(--content-emphasis);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.name.dimmed {
+  opacity: 0.4;
+}
+
+.reimportProgress {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.nodeActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.nodeRow:hover .nodeActions,
+.nodeRow:has(.actionBtn.active) .nodeActions {
+  opacity: 1;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--content-muted);
+  border-radius: 3px;
+}
+
+.actionBtn.active {
+  color: var(--content-emphasis);
+}
+
+.children {
+  /* Children inherit parent styling */
+}
+
+.createWrapper {
+  position: relative;
+}
+
+.createMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 160px;
+  background: var(--bg-surface300);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  padding: 4px;
+}
+
+.createOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--content-default);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.createOption:hover {
+  background: var(--content-hover);
+  color: var(--content-emphasis);
+}
+
+.createOption svg {
+  color: var(--content-link);
+}
+
+
+
+

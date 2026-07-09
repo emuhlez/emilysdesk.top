@@ -1,0 +1,10 @@
+.contextMenu {
+  position: fixed;
+  z-index: 10000;
+}
+
+.contextMenu > div {
+  position: relative;
+  top: 0;
+  left: 0;
+}

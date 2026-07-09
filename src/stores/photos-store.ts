@@ -11,6 +11,14 @@ export interface PhotoItem {
   height: number
   isVideo?: boolean
   duration?: number // seconds, for videos
+  /** For video items: the playable source URL. The grid renders a <video>
+   *  element so the still frame acts as the thumbnail and the clip plays in
+   *  place. Images leave this undefined and render via <img src>. */
+  videoSrc?: string
+  /** For video items: a pre-rendered first-frame JPEG. Shown instantly as the
+   *  grid thumbnail and as the <video poster> so nothing has to decode the
+   *  clip before a frame appears. Generated into public/videos/. */
+  poster?: string
 }
 
 export interface Album {
@@ -62,6 +70,9 @@ interface PhotosState {
   selectSection: (s: SidebarSection) => void
   setViewMode: (m: ViewMode) => void
   selectPhoto: (id: string | null) => void
+  /** Toggle the `favorite` flag on a single photo by id (detail-view heart
+   *  button). No-op if the id isn't in the library. */
+  toggleFavorite: (id: string) => void
   setSearchQuery: (q: string) => void
   /** Snap zoom up to the next integer stop (toolbar + button). */
   zoomIn: () => void
@@ -77,39 +88,55 @@ interface PhotosState {
   snapZoom: () => void
 }
 
-function makeId() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
-}
-
-const TOTAL = 56
-
-const SAMPLE_PHOTOS: PhotoItem[] = Array.from({ length: TOTAL }, (_, i) => {
-  const w = 400 + (i % 3) * 100
-  const h = 300 + (i % 4) * 80
-  const isVideo = i % 7 === 3
-  /* Quadratic spread of capture dates so the seed library spans roughly the
-   * last 2.5 years rather than a single 14-day window. Recent photos cluster
-   * (low i = small daysAgo gap), older photos thin out — same shape as a
-   * real photo library. Years view ends up with 2026/2025/2024 sections;
-   * Months view gets ~12–15 sections with denser-recent / sparser-older
-   * photo counts. */
-  const daysAgo = Math.floor((i * i) / 4)
-  const date = new Date(2026, 3, 12)
-  date.setDate(date.getDate() - daysAgo)
-  date.setHours(12, (i * 5) % 60)
-  return {
-    id: makeId(),
-    src: `https://picsum.photos/seed/photo${i}/${w}/${h}`,
-    alt: `Photo ${i + 1}`,
-    date: date.toISOString(),
-    favorite: i % 5 === 0,
-    albumIds: i % 3 === 0 ? ['album-1'] : [],
-    width: w,
-    height: h,
-    isVideo,
-    duration: isVideo ? [40, 5, 30, 12, 65][i % 5] : undefined,
-  }
-})
+/* The library is Emily's real home movies, served from `public/videos/`.
+ * Each entry is a video: the grid renders a <video> so the still first frame
+ * acts as the thumbnail and the clip plays in place. Dimensions/durations are
+ * the files' true values (probed via `mdls`) so the justified-row packing and
+ * duration badges are accurate. */
+const SAMPLE_PHOTOS: PhotoItem[] = [
+  {
+    id: 'video-mozart',
+    src: '/videos/emily-old-movies-mozart.poster.jpg',
+    videoSrc: '/videos/emily-old-movies-mozart.m4v',
+    poster: '/videos/emily-old-movies-mozart.poster.jpg',
+    alt: "Emily's Old Movies — Mozart",
+    date: new Date(2026, 3, 12, 12, 0).toISOString(),
+    favorite: true,
+    albumIds: ['album-1'],
+    width: 320,
+    height: 240,
+    isVideo: true,
+    duration: 258,
+  },
+  {
+    id: 'video-animation',
+    src: '/videos/emily-old-movies-animation.poster.jpg',
+    videoSrc: '/videos/emily-old-movies-animation.m4v',
+    poster: '/videos/emily-old-movies-animation.poster.jpg',
+    alt: "Emily's Old Movies Animation",
+    date: new Date(2026, 3, 10, 14, 30).toISOString(),
+    favorite: false,
+    albumIds: [],
+    width: 480,
+    height: 272,
+    isVideo: true,
+    duration: 63,
+  },
+  {
+    id: 'video-matilda',
+    src: '/videos/matilda-movie-preview.poster.jpg',
+    videoSrc: '/videos/matilda-movie-preview.m4v',
+    poster: '/videos/matilda-movie-preview.poster.jpg',
+    alt: 'Matilda Movie Preview',
+    date: new Date(2026, 3, 8, 16, 15).toISOString(),
+    favorite: false,
+    albumIds: [],
+    width: 480,
+    height: 272,
+    isVideo: true,
+    duration: 74,
+  },
+]
 
 const DEFAULT_ALBUMS: Album[] = [{ id: 'album-1', name: 'Favorites' }]
 
@@ -125,6 +152,12 @@ export const usePhotosStore = create<PhotosState>((set) => ({
   selectSection: (s) => set({ selectedSection: s, selectedPhotoId: null }),
   setViewMode: (m) => set({ viewMode: m }),
   selectPhoto: (id) => set({ selectedPhotoId: id }),
+  toggleFavorite: (id) =>
+    set((st) => ({
+      photos: st.photos.map((p) =>
+        p.id === id ? { ...p, favorite: !p.favorite } : p,
+      ),
+    })),
   setSearchQuery: (q) => set({ searchQuery: q }),
   /* Snap to the next integer stop *above* the current (possibly fractional)
    * value — so pinching to 2.3 and clicking + lands you on 3, not 3.3. */

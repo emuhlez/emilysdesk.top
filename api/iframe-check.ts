@@ -138,8 +138,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let target: URL
   try {
     target = validateUrl(url)
-  } catch (e: any) {
-    return res.status(400).json({ error: e.message })
+  } catch (e) {
+    return res.status(400).json({ error: e instanceof Error ? e.message : String(e) })
   }
 
   /* ── check mode ── */
@@ -283,7 +283,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Explicitly do NOT set X-Frame-Options
 
     return res.status(upstream.status).send(html)
-  } catch (e: any) {
-    return res.status(502).json({ error: 'Failed to fetch target URL', detail: e.message })
+  } catch (e) {
+    return res.status(502).json({
+      error: 'Failed to fetch target URL',
+      detail: e instanceof Error ? e.message : String(e),
+    })
   }
 }

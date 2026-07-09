@@ -1,0 +1,425 @@
+.dockLayout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+  background: var(--bg-darkest);
+  position: relative;
+}
+
+/* Resize handles – thin divider, subtle on hover, cursor indicates direction */
+.resizeHandle {
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.12s ease;
+  z-index: 2;
+}
+.resizeHandle:hover,
+.resizeHandle:active {
+  background: var(--border-subtle);
+}
+
+.resizeHandle_e {
+  width: 2px;
+  min-width: 2px;
+  cursor: ew-resize;
+}
+.resizeHandle_w {
+  width: 2px;
+  min-width: 2px;
+  cursor: ew-resize;
+}
+.resizeHandle_n,
+.resizeHandle_s {
+  height: 1px;
+  min-height: 1px;
+  cursor: ns-resize;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  background: var(--bg-surface100);
+}
+
+.leftColumn.emptyColumn {
+  flex: 0 0 0;
+  width: 0;
+  min-width: 0;
+  overflow: visible; /* So drop targets still work when dragging */
+  border: none;
+  pointer-events: none; /* Prevent interaction when empty */
+}
+
+.leftColumn.emptyColumn > * {
+  pointer-events: auto; /* Re-enable for drop zones */
+}
+
+.resizeHandleLeft {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  min-width: 2px;
+}
+
+.resizeHandleRight {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  min-width: 2px;
+}
+
+.resizeHandleCenterBottom,
+.resizeHandleRightSplit {
+  flex-shrink: 0;
+  height: 1px;
+  min-height: 1px;
+}
+
+.rightTop.rightTopHidden,
+.rightBottom.rightBottomHidden {
+  flex: 0 0 0;
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: none;
+}
+
+/* Drop-line strips: visible only during drag for empty right-column zones */
+.rightTop.rightTopDropLine,
+.rightBottom.rightBottomDropLine {
+  flex: 0 0 auto;
+  height: 32px;
+  min-height: 32px;
+  overflow: visible;
+  position: relative;
+  background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+  transition:
+    background var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+.rightTop.rightTopDropLine {
+  border-bottom: 2px dashed color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.rightBottom.rightBottomDropLine {
+  border-top: 2px dashed color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+/* Expand empty zone to full strip width so elementFromPoint hits [data-zone] */
+.rightTop.rightTopDropLine .dockZone.right-top.empty,
+.rightBottom.rightBottomDropLine .dockZone.right-bottom.empty {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+}
+
+/* The actual horizontal "widget line" centered inside the strip */
+.rightTop.rightTopDropLine::after,
+.rightBottom.rightBottomDropLine::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 16%;
+  right: 16%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  border-radius: 1px;
+  pointer-events: none;
+  transition: background var(--transition-normal);
+}
+
+/* Brighter highlight when this zone is the active drop target */
+.rightTop.rightTopDropLine .dockZone:global(.dragOver),
+.rightBottom.rightBottomDropLine .dockZone:global(.dragOver) {
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent) !important;
+}
+
+.rightTop.rightTopDropLine:has(.dockZone:global(.dragOver)),
+.rightBottom.rightBottomDropLine:has(.dockZone:global(.dragOver)) {
+  border-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+}
+
+.rightTop.rightTopDropLine:has(.dockZone:global(.dragOver))::after,
+.rightBottom.rightBottomDropLine:has(.dockZone:global(.dragOver))::after {
+  background: color-mix(in srgb, var(--accent-primary) 80%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rightTop.rightTopDropLine,
+  .rightBottom.rightBottomDropLine,
+  .rightTop.rightTopDropLine::after,
+  .rightBottom.rightBottomDropLine::after {
+    transition: none;
+  }
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+  width: 320px;
+  min-width: 260px;
+  position: relative;
+  background: var(--bg-panel);
+}
+
+.rightTop {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+}
+
+.rightBottom {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+}
+
+.rightColumn.emptyColumn {
+  flex: 0 0 0;
+  width: 0;
+  min-width: 0;
+  overflow: visible; /* So drop targets work when dragging */
+  border: none;
+  pointer-events: none;
+}
+
+.rightColumn.emptyColumn > * {
+  pointer-events: auto; /* Re-enable for drop zones */
+}
+
+.centerColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+}
+
+.centerColumn.emptyColumn {
+  min-height: 300px;
+}
+
+.centerColumnWrapper {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.centerTop {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+}
+
+.centerBottom {
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  min-height: 0;
+  transition: height 0.15s ease, min-height 0.15s ease, overflow 0.15s ease;
+}
+
+.centerBottom.centerBottomHidden {
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: none;
+}
+
+.centerBottom.centerBottomCollapsed {
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.centerBottom.centerBottomCollapsed .dockZone {
+  align-items: flex-start;
+}
+
+.dockZone {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dockZone.empty {
+  flex: 0 0 0;
+  min-width: 0;
+  min-height: 0;
+  width: 0;
+  overflow: visible;
+  background: var(--bg-panel);
+}
+
+.dockZone.left {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-subtle);
+}
+
+.dockZone.right-top,
+.dockZone.right-bottom {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: var(--bg-panel);
+}
+
+.dockZone.right-top {
+  border-left: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dockZone.right-bottom {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.dockZone.center-top {
+  flex: 1;
+  background: var(--bg-dark);
+  flex-direction: row;
+}
+
+.dockZone.center-bottom {
+  flex: 1;
+  min-width: 0;
+}
+
+.dockZone.center-bottom > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Frost highlight on hovered drop target during shell drag (studio-ai parity) */
+.dockLayout:not([data-drag-active='true']) .dockZone:global(.dragOver) {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent) !important;
+  border: 2px dashed color-mix(in srgb, var(--accent-primary) 40%, transparent) !important;
+}
+
+/* Edge strips: proximity-based drop hints */
+.dockEdge {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+  transition:
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.dockEdge[data-edge='bottom'] {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  border-top: 2px solid color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.dockEdge[data-edge='right'] {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 48px;
+  border-left: 2px solid color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.dockEdge[data-edge='left'] {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 48px;
+  border-right: 2px solid color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.dockEdge[data-edge='top'] {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 48px;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+.dockEdge:global(.dragOver) {
+  background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  box-shadow: inset 0 0 20px color-mix(in srgb, var(--accent-primary) 40%, transparent);
+}
+
+.dockEdge[data-edge='bottom']:global(.dragOver) {
+  border-top-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+}
+
+.dockEdge[data-edge='right']:global(.dragOver) {
+  border-left-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+}
+
+.dockEdge[data-edge='left']:global(.dragOver) {
+  border-right-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+}
+
+.dockEdge[data-edge='top']:global(.dragOver) {
+  border-bottom-color: color-mix(in srgb, var(--accent-primary) 70%, transparent);
+}
+
+/* Center = right-top / explorer zone target */
+.dockCenter {
+  position: absolute;
+  z-index: 19;
+  pointer-events: none;
+  top: 48px;
+  left: 48px;
+  right: 48px;
+  bottom: 48px;
+  border-radius: var(--radius-md);
+  border: 2px dashed color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  transition:
+    background var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.dockCenter:global(.dragOver) {
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  box-shadow: inset 0 0 30px color-mix(in srgb, var(--accent-primary) 15%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dockEdge,
+  .dockCenter {
+    transition: none;
+  }
+}
+

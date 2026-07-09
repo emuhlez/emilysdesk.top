@@ -1,0 +1,212 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.menu {
+  position: fixed;
+  width: 244px;
+  height: 300px;
+  background: var(--bg-surface200);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin: 8px 4px 4px;
+  height: 28px;
+  background: rgba(208, 217, 251, 0.08);
+  border: none;
+  border-radius: 8px;
+  transition: all var(--transition-fast);
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
+.searchContainer:hover {
+  background: var(--content-hover);
+}
+
+.searchContainer:focus-within {
+  background: rgba(208, 217, 251, 0.08);
+}
+
+.searchIcon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  color: var(--content-muted);
+  font-size: 12px;
+  font-weight: 400;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+
+.searchInput::placeholder {
+  color: var(--content-muted);
+}
+
+.searchClear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.searchClear:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scrollContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px;
+  min-height: 0;
+}
+
+.noResults {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--content-muted);
+  font-size: 12px;
+}
+
+.section {
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px;
+  min-height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--content-default);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sectionHeader svg {
+  color: var(--content-muted);
+  flex-shrink: 0;
+  order: 1;
+}
+
+.sectionHeader span {
+  color: #BCBEC8;
+}
+
+.sectionContent {
+  padding: 0;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 28px;
+  min-height: 24px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--content-default);
+  text-align: left;
+  transition: all var(--transition-fast);
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.checkboxLabel:hover {
+  background: rgba(208, 217, 251, 0.12);
+  color: var(--content-emphasis);
+}
+
+.checkboxLabel.selected {
+  background: rgba(208, 217, 251, 0.16);
+  color: var(--content-emphasis);
+}
+
+.checkboxLabel.selected:hover {
+  background: rgba(208, 217, 251, 0.2);
+}
+
+.checkmark {
+  position: absolute;
+  left: 8px;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.resetButton {
+  flex-shrink: 0;
+  width: calc(100% - 8px);
+  padding: 8px 12px;
+  min-height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--content-default);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  margin: 8px 4px 8px;
+  position: relative;
+}
+
+.resetButton::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.resetButton:hover {
+  background: rgba(208, 217, 251, 0.12);
+  color: var(--content-emphasis);
+}

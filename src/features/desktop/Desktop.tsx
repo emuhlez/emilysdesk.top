@@ -249,7 +249,24 @@ export function Desktop() {
             )
           })}
           <DockDivider onSizeChange={setDockIconSize} iconSize={dockIconSize} />
-          <div data-genie-target style={{ height: 'var(--dock-icon-size)', width: 0 }} />
+          {/* Invisible anchor for the genie minimize animation. It's a 0-width
+           *  flex sibling, which means the dock's `gap` would otherwise insert
+           *  an extra full gap between the divider and whatever follows
+           *  (trash, or the first minimized snapshot). That made the trash
+           *  sit ~one-gap further from the divider line than the leftmost app
+           *  sits on the other side — visibly asymmetric. The negative
+           *  margin-left, sized to the exact same `gap` formula used by
+           *  <DockBackground>, cancels that extra gap so the divider's
+           *  surroundings stay symmetric whether or not minimized windows
+           *  exist. */}
+          <div
+            data-genie-target
+            style={{
+              height: 'var(--dock-icon-size)',
+              width: 0,
+              marginLeft: 'calc(var(--dock-icon-size) * -8 / 36)',
+            }}
+          />
           {/* Minimized-windows region of the dock: ALWAYS render
            *  <MinimizedSnapshot>, never <DockIcon>. The `snapshot` prop is
            *  optional — when capture succeeded it shows the real PNG, when

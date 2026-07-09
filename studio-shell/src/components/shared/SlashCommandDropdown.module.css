@@ -1,0 +1,89 @@
+.dropdown {
+  position: fixed;
+  z-index: 1100;
+  width: 280px;
+  max-height: 251px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Inner padding on the inline axis is split: 4px left (matches top/bottom)
+     plus a reserved scrollbar gutter on the right so items' hover bg never
+     extends under the scrollbar and the layout doesn't shift when scroll
+     appears. */
+  padding: 4px;
+  scrollbar-gutter: stable;
+  background: var(--bg-surface200, #202227);
+  border: 1px solid var(--border-default, rgba(208, 217, 251, 0.10));
+  border-radius: var(--radius-md, 8px);
+  box-shadow:
+    0 2px 4px rgba(4, 4, 8, 0.25),
+    0 10px 20px rgba(4, 4, 8, 0.25),
+    0 16px 32px rgba(4, 4, 8, 0.25);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.dropdown::-webkit-scrollbar-track {
+  background: transparent;
+  /* Inset the track from rounded corners so the scrollbar doesn't touch them */
+  margin: 4px 0;
+}
+.dropdown::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+  /* Transparent border carves the thumb visually inward away from the edge */
+  background-clip: padding-box;
+  border: 1px solid transparent;
+}
+.dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+  background-clip: padding-box;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  /* Slightly tighter horizontal padding so hover bg sits comfortably inside
+     the (now gutter-reserved) content area. */
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.item:hover,
+.item[data-selected='true'] {
+  background: var(--content-hover, rgba(208, 217, 251, 0.08));
+}
+
+.item[data-selected='true'] {
+  background: var(--content-pressed, rgba(208, 217, 251, 0.12));
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--content-emphasis, #f7f7f8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caption {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--content-muted, #bcbec8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

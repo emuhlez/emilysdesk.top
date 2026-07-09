@@ -1,44 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { TrafficLights } from '../../components/TrafficLights'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
-import { TrafficLights } from '../../components/TrafficLights'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
-import { WINDOW_TITLE_STYLE } from '../../styles/typography'
-import {
-  MENU_BAR_H,
-  DOCK_H,
-  HANDLE,
-  MOBILE_BREAKPOINT,
-  TITLE_BAR_BG,
-} from '../../constants/window-chrome'
 
-/**
- * Roblox Studio window — iframes the deployed studio-shell mockup at
- * `https://studio-shell.vercel.app/`. We own the macOS chrome (traffic
- * lights, drag/resize, minimize/fullscreen) and the studio mockup
- * lives entirely inside the iframe.
- *
- * The drag/resize boilerplate is structurally identical to
- * `NotesWindow.tsx` — same Rect/Dir model, same clamp & resize helpers,
- * same `useMinimizeAnimation` + `useFitWindowToViewport` wiring. If you
- * change one, change the other (or extract into a shared hook).
- *
- * IFRAME GOTCHAS:
- *  - `data-skip-snapshot` on the iframe tells `useMinimizeAnimation`'s
- *    html-to-image filter to skip it. Without that flag, cross-origin
- *    iframes throw SecurityError during the snapshot pass and abort the
- *    whole dock-thumbnail capture.
- *  - While dragging/resizing the window, we set `pointerEvents: 'none'`
- *    on the iframe so the iframe doesn't swallow the pointermove events
- *    when the cursor crosses over it mid-drag.
- *  - The studio-shell deployment must NOT send
- *    `X-Frame-Options: DENY` or `Content-Security-Policy:
- *    frame-ancestors 'none'` headers, or the iframe will refuse to
- *    load. If that ever happens, route through `/api/iframe-check` the
- *    same way `ArcWindow` does.
- */
-const STUDIO_URL = 'https://studio-shell.vercel.app/'
+/* ─── resize types ─── */
 
 type Dir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
@@ -49,8 +16,15 @@ interface Rect {
   h: number
 }
 
-const MIN_W = 720
-const MIN_H = 480
+const MENU_BAR_H = 28
+const DOCK_H = 70
+// studio-shell's editor (toolbar + five dock zones) is dense — anything
+// smaller than ~1024×640 and the inspector / hierarchy panels clip badly.
+const MIN_W = 1024
+const MIN_H = 640
+const HANDLE = 6
+const TITLEBAR_H = 36
+const MOBILE_BREAKPOINT = 640
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -128,6 +102,49 @@ function applyResize(start: Rect, dir: Dir, dx: number, dy: number): Rect {
 
 const ALL_DIRS: Dir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
 
+/* ─── studio-shell URL ──────────────────────────────────────────────────
+ *
+ *  The Roblox Studio "app" inside this desktop is a live iframe of the
+ *  studio-shell subproject that lives in this repo at ./studio-shell/
+ *  (imported via `git subtree --squash`; deploys as its own Vercel
+ *  project). In dev that means pointing this window at studio-shell's
+ *  Vite dev server (port 3000 by default — see
+ *  studio-shell/vite.config.ts). Boot both from the repo root with
+ *  `npm run dev:all` and every save inside ./studio-shell/ hot-reloads
+ *  inside this window with no host rebuild — true live mirror.
+ *
+ *  For prod / preview deploys, set VITE_STUDIO_SHELL_URL at build time
+ *  to studio-shell's hosted URL (the second Vercel project pointed at
+ *  ./studio-shell/). The "mirror forever" behavior in prod comes from
+ *  the host iframing that stable URL — redeploy studio-shell and the
+ *  in-shell app updates automatically, no host redeploy needed.
+ *  Defaults to localhost:3000 so a fresh clone "just works" in dev.
+ *
+ *  Note: this is intentionally a CROSS-ORIGIN iframe (localhost:5180 ↔
+ *  localhost:3000 in dev, host-vercel ↔ studio-shell-vercel in prod),
+ *  which means:
+ *    - html-to-image can't paint a real minimize thumbnail of its
+ *      contents — Desktop.tsx's MinimizedSnapshot already falls back to
+ *      the dark placeholder + corner-badge for that case, so this
+ *      degrades gracefully instead of breaking.
+ *    - studio-shell's heavy global CSS (BuilderSans, `:root` vars,
+ *      `body { overflow: hidden }`) stays scoped to its own document
+ *      and can't leak into the macOS chrome — which is exactly why we
+ *      iframe instead of vendoring (see system-architect proposal). */
+const STUDIO_SHELL_URL =
+  (import.meta.env.VITE_STUDIO_SHELL_URL as string | undefined) ?? 'http://localhost:3000'
+
+/* Detect Electron via the preload-exposed flag, same convention ArcWindow
+ * uses. In Electron we render <webview> instead of <iframe> — webviews
+ * give us native back/forward, isolated session storage, and don't carry
+ * the cross-origin iframe sandboxing constraints. */
+const isElectron =
+  typeof window !== 'undefined' &&
+  ((window as unknown as { isElectronApp?: boolean }).isElectronApp === true ||
+    (typeof (window as unknown as { process?: { versions?: { electron?: string } } }).process?.versions?.electron === 'string'))
+
+/* ─── window ─── */
+
 export function RobloxStudioWindow({
   onFocus,
   zIndex,
@@ -138,24 +155,25 @@ export function RobloxStudioWindow({
   const [rect, setRect] = useState<Rect>(() => {
     const vw = window.innerWidth
     const vh = window.innerHeight
+    const availH = vh - MENU_BAR_H - DOCK_H
     const isMobile = vw < MOBILE_BREAKPOINT
-    const w = isMobile ? vw : Math.min(1180, vw - 40)
-    const h = isMobile
-      ? vh - MENU_BAR_H - DOCK_H
-      : Math.min(740, vh - MENU_BAR_H - DOCK_H - 40)
+    // 20px breathing room on each side matches Notes/Photos. The initial w/h
+    // intentionally do NOT clamp up to MIN_W/MIN_H — siblings (Arc, Notes,
+    // Photos) all let the *initial* rect be smaller than the min on narrow
+    // viewports, which keeps the window visibly inset from the desktop edges
+    // even at e.g. 1024px wide. MIN_W/MIN_H still kick in when the user
+    // resizes via clampResize / applyResize, so the floor is enforced once
+    // the user is actively dragging an edge.
+    const margin = isMobile ? 0 : 20
+    const w = isMobile ? vw : Math.min(1280, vw - margin * 2)
+    const h = isMobile ? availH : Math.min(800, availH - margin * 2)
     const x = isMobile ? 0 : Math.round((vw - w) / 2)
-    const y = MENU_BAR_H + (isMobile ? 0 : Math.round((vh - MENU_BAR_H - DOCK_H - h) / 2))
+    const y = MENU_BAR_H + (isMobile ? 0 : margin + Math.round((availH - margin * 2 - h) / 2))
     return { x, y, w, h }
   })
 
   const rectRef = useRef(rect)
-
-  // Mirror the latest rect into a ref for the drag handlers. Layout-effect
-  // write (not during render) satisfies react-hooks/refs while keeping the
-  // useRef visible to the React Compiler as a stable dep.
-  useLayoutEffect(() => {
-    rectRef.current = rect
-  })
+  rectRef.current = rect
 
   const closeApp = useAppStore((s) => s.closeApp)
   const setFullscreenApp = useAppStore((s) => s.setFullscreenApp)
@@ -175,12 +193,12 @@ export function RobloxStudioWindow({
     setPreFullscreenRect,
   )
 
-  const windowRef = useRef<HTMLDivElement>(null)
-
   const handleClose = useCallback(() => {
     closeApp('roblox-studio')
     setFullscreenApp(null)
   }, [closeApp, setFullscreenApp])
+
+  const windowRef = useRef<HTMLDivElement>(null)
 
   const { outerRef, handleMinimize } = useMinimizeAnimation(
     'roblox-studio',
@@ -234,21 +252,25 @@ export function RobloxStudioWindow({
 
   useEffect(() => {
     if (!dragging) return
+
     const onMove = (e: PointerEvent) => {
       if (!dragRef.current) return
       const { startX, startY, startRect, mode } = dragRef.current
       const dx = e.clientX - startX
       const dy = e.clientY - startY
+
       if (mode === 'move') {
         setRect(clampMove({ ...startRect, x: startRect.x + dx, y: startRect.y + dy }))
       } else {
         setRect(applyResize(startRect, mode, dx, dy))
       }
     }
+
     const onUp = () => {
       dragRef.current = null
       setDragging(false)
     }
+
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     return () => {
@@ -280,77 +302,105 @@ export function RobloxStudioWindow({
         className="relative flex h-full w-full flex-col overflow-hidden"
         style={{
           borderRadius: fullscreen ? 0 : 24,
-          background: '#1E1E1E',
+          background: '#121215',
           boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
         }}
       >
-        {/* macOS title bar — minimal because the studio-shell iframe
-         *  paints its own ribbon / toolbars right below. We only own
-         *  the traffic lights, the centered title, and the drag
-         *  handle.
+        {/* Titlebar — minimal because studio-shell paints its own toolbar
+         *  underneath. We just need a drag handle + traffic lights.
          *
-         *  macOS Tahoe title bar styling:
-         *   - Shared opaque dark-window tone (`TITLE_BAR_BG`, #222222),
-         *     the same flat fill Notes uses, over the #1E1E1E body.
-         *   - 36px tall — sits between the compact (28px) and standard
-         *     (40px) Tahoe title-bar heights, giving the title room to
-         *     breathe without feeling un-Mac.
-         *   - Traffic lights inset 20px from the left so they visually
-         *     balance against the 24px window corner radius (lights
-         *     sitting too close to the curve looked cramped). Right
-         *     padding stays at 18px for visual balance on the title
-         *     side, with a 16px gap between the lights and the
-         *     title. */}
+         *  Background is one step lighter than the iframe fill (#202227 vs
+         *  #121215) — matches studio-shell's `--bg-surface200` token and the
+         *  macOS Tahoe focused-window chrome color. The 1 px tonal seam
+         *  between the titlebar and studio-shell's own top toolbar is
+         *  intentional: it reads as a real chrome → content boundary the
+         *  same way a native Roblox Studio.app titlebar does, rather than
+         *  the prior "single continuous black surface" treatment.
+         *
+         *  Traffic-light inset = 20 px (pl-5), matching
+         *  PhotosSidebarHeader's `TRAFFIC_LEFT_INSET` and the macOS
+         *  canonical position. Right padding kept tight (pr-3) because
+         *  nothing lives on the right side of this titlebar — the centered
+         *  title is absolutely positioned, not part of the flex flow. */}
         <div
-          className="relative flex shrink-0 items-center"
+          className="relative flex shrink-0 items-center pl-5 pr-3"
           style={{
-            height: 36,
-            paddingLeft: 20,
-            paddingRight: 18,
-            background: TITLE_BAR_BG,
+            height: TITLEBAR_H,
+            background: '#202227',
             cursor: 'default',
             touchAction: 'none',
-            fontSize: 14,
           }}
-          onPointerDown={(e) => startDrag('move', e)}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) startDrag('move', e)
+          }}
           onDoubleClick={handleFullscreen}
         >
-          <div onPointerDown={(e) => e.stopPropagation()}>
-            <TrafficLights
-              onClose={handleClose}
-              onMinimize={handleMinimize}
-              onFullscreen={handleFullscreen}
-            />
-          </div>
-          {/* Left-aligned title — sits next to the traffic lights with a
-           *  16px gap. Uses the shared `WINDOW_TITLE_STYLE` (13/600,
-           *  near-white) so it matches Notes/Photos exactly.
-           *  `pointer-events: none` so it doesn't eat the drag handler
-           *  on the title bar. */}
-          <div className="pointer-events-none" style={{ ...WINDOW_TITLE_STYLE, marginLeft: 16 }}>
+          <TrafficLights
+            onClose={handleClose}
+            onMinimize={handleMinimize}
+            onFullscreen={handleFullscreen}
+          />
+          {/* Centered window title — pointer-events-none so it doesn't
+           *  steal drags from the titlebar. */}
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center text-[12px] font-medium"
+            style={{ color: 'rgba(255, 255, 255, 0.55)' }}
+          >
             Roblox Studio
           </div>
         </div>
 
-        {/* Iframe body. `pointerEvents: none` while dragging so cross-
-         *  iframe pointermoves don't get swallowed mid-drag (otherwise
-         *  the window "sticks" the moment the cursor enters the
-         *  iframe). `data-skip-snapshot` excludes this from the dock
-         *  minimize thumbnail capture. */}
-        <iframe
-          src={STUDIO_URL}
-          title="Roblox Studio"
-          data-skip-snapshot
-          style={{
-            flex: 1,
-            width: '100%',
-            border: 0,
-            background: '#1E1E1E',
-            pointerEvents: dragging ? 'none' : 'auto',
-            display: 'block',
-          }}
-        />
+        {/* Embedded studio-shell — fills the remaining content area.
+         *  data-skip-snapshot keeps html-to-image from even trying to
+         *  paint the cross-origin iframe during minimize capture (it
+         *  would throw SecurityError mid-capture and abort the whole
+         *  thumbnail). The window chrome above still captures, so the
+         *  dock thumb reads as the actual Roblox Studio window outline
+         *  instead of a blank rectangle. */}
+        <div
+          className="relative min-h-0 flex-1 overflow-hidden"
+          style={{ background: '#121215' }}
+        >
+          {/* Pointer-events shield: while the user is dragging the
+           *  window edge / titlebar / a resize handle, swallow pointer
+           *  events on the iframe so the drag doesn't get hijacked by
+           *  studio-shell's own pointer handlers (its hierarchy panel,
+           *  viewport, etc. all capture aggressively). */}
+          {isElectron ? (
+            <webview
+              src={STUDIO_SHELL_URL}
+              data-skip-snapshot
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: dragging ? 'none' : 'auto',
+              }}
+            />
+          ) : (
+            <iframe
+              src={STUDIO_SHELL_URL}
+              title="Roblox Studio"
+              data-skip-snapshot
+              allow="clipboard-read; clipboard-write; fullscreen"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                pointerEvents: dragging ? 'none' : 'auto',
+              }}
+            />
+          )}
+        </div>
 
+        {/* Inner border overlay. Mirrors NotesWindow / PhotosWindow's chrome
+         *  rim so all three windows read as the same surface — a single soft
+         *  1 px inset stroke at 0.22 white, sitting just inside the rounded
+         *  corner. Sits on top of the iframe so the rim is visible against
+         *  studio-shell's dark fill instead of being clipped by overflow. */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -360,14 +410,14 @@ export function RobloxStudioWindow({
         />
       </div>
 
-      {!fullscreen &&
-        ALL_DIRS.map((dir) => (
-          <div
-            key={dir}
-            style={{ ...handleStyle(dir), touchAction: 'none' }}
-            onPointerDown={(e) => startDrag(dir, e)}
-          />
-        ))}
+      {/* Resize handles */}
+      {ALL_DIRS.map((dir) => (
+        <div
+          key={dir}
+          style={{ ...handleStyle(dir), touchAction: 'none' }}
+          onPointerDown={(e) => startDrag(dir, e)}
+        />
+      ))}
     </div>
   )
 }
