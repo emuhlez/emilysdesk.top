@@ -1,6 +1,7 @@
 import type { CSSProperties, PropsWithChildren, ReactNode } from 'react'
 import { Children, Fragment, createContext, useContext, useState } from 'react'
 import { LayoutGroup, motion } from 'framer-motion'
+import { FONT_STACK, WINDOW_TITLE_STYLE } from '../../../styles/typography'
 import infoCircleMediumSvg from '../../../../assets/sf-symbols/info.circle--monochrome--medium.svg?raw'
 import heartMediumSvg from '../../../../assets/sf-symbols/heart--monochrome--medium.svg?raw'
 import personCropRectangleSvg from '../../../../assets/sf-symbols/person.crop.rectangle--monochrome--medium.svg?raw'
@@ -194,7 +195,7 @@ function GlassCluster({
             position: 'absolute',
             inset: 0,
             borderRadius: 999,
-            background: hovered ? 'rgba(255,255,255,0.12)' : 'transparent',
+            background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
             transition: 'background 140ms ease',
             pointerEvents: 'none',
           }}
@@ -333,7 +334,7 @@ function GlassButton({
                 transform: 'translate(-50%, -50%)',
                 borderRadius: Math.min(width, height) / 2,
               }),
-          background: showHover ? 'rgba(255,255,255,0.12)' : 'transparent',
+          background: showHover ? 'rgba(255,255,255,0.08)' : 'transparent',
           transition: 'background 140ms ease',
           pointerEvents: 'none',
         }}
@@ -352,22 +353,13 @@ function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
         padding: '6px 14px 6px 0',
       }}
     >
-      <span
-        style={{
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-          fontSize: 13,
-          fontWeight: 600,
-          letterSpacing: '-0.14px',
-          color: 'rgba(255,255,255,0.96)',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span style={{ ...WINDOW_TITLE_STYLE, whiteSpace: 'nowrap' }}>
         {title}
       </span>
       {subtitle && (
         <span
           style={{
-            fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+            fontFamily: FONT_STACK,
             fontSize: 11,
             fontWeight: 500,
             color: 'rgba(255,255,255,0.52)',
@@ -712,7 +704,7 @@ function ViewTab({
       style={{
         cursor: 'default',
         padding: '6px 12px',
-        fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+        fontFamily: FONT_STACK,
         fontSize: 12,
         letterSpacing: '-0.08px',
         whiteSpace: 'nowrap',

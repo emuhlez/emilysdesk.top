@@ -1,5 +1,7 @@
 import { TrafficLights } from '../../../components/TrafficLights'
 import { useNotesStore } from '../../../stores/notes-store'
+import { WINDOW_TITLE_STYLE } from '../../../styles/typography'
+import { TITLE_BAR_BG } from '../../../constants/window-chrome'
 import sidebarLeftSvg from '../../../../notes/sidebar left.svg?raw'
 import moreSvg from '../../../../notes/more.svg?raw'
 import writingSvg from '../../../../notes/writing.svg?raw'
@@ -106,16 +108,19 @@ export function NotesToolbar({
 
   return (
     <div
-      className="flex shrink-0 items-center px-4"
+      className="flex shrink-0 items-center pl-5 pr-4"
       style={{
         height: 50,
         cursor: 'default',
         touchAction: 'none',
-        background: '#222222',
+        background: TITLE_BAR_BG,
         borderBottom: '1px solid rgba(255,255,255,0.08)',
       }}
       onPointerDown={onDragStart}
     >
+      {/* 20px traffic-light left inset matches the macOS canonical position
+       *  used by `PhotosSidebarHeader.tsx:21` (TRAFFIC_LEFT_INSET). Right
+       *  side stays at 16px because no chrome element pins to it. */}
       <TrafficLights onClose={onClose} onMinimize={onMinimize} onFullscreen={onFullscreen} />
       {/* Sidebar toggle */}
       <div
@@ -133,7 +138,7 @@ export function NotesToolbar({
       />
       {/* Title + note count */}
       <div className="flex shrink-0 flex-col whitespace-nowrap leading-tight" style={{ marginLeft: 18 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>Notes</span>
+        <span style={WINDOW_TITLE_STYLE}>Notes</span>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.40)' }}>{noteCount} {noteCount === 1 ? 'note' : 'notes'}</span>
       </div>
       {/* Spacer */}

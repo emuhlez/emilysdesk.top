@@ -77,15 +77,15 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
 
 /** Ordered list of app IDs for dock rendering (excluding trash, which is after the divider).
  *
- *  `figma` is intentionally hidden until we're ready to build the Figma app
- *  surface — its registry entry + icon import are kept above so re-enabling
- *  is a one-line revert (just add `'figma'` back into this array, between
- *  `roblox-studio` and `notes` to preserve the original order). */
+ *  `figma` and `messages` are intentionally hidden until their app surfaces
+ *  are built. Their registry entries + icon imports are kept above so
+ *  re-enabling is a one-line revert: add `'figma'` between `roblox-studio`
+ *  and `notes`, and `'messages'` after `photos`, to restore the original
+ *  order. */
 export const DOCK_ORDER: string[] = [
   'finder',
   'arc',
   'roblox-studio',
   'notes',
   'photos',
-  'messages',
 ]

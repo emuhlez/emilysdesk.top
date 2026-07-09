@@ -11,6 +11,7 @@ import {
   usePhotosStore,
   type PhotoItem,
 } from '../../../stores/photos-store'
+import { FONT_STACK, DISPLAY_FONT_STACK } from '../../../styles/typography'
 
 /* Trackpad pinch gestures and Ctrl+scroll on a mouse wheel both surface as
  * `wheel` events with `event.ctrlKey === true` in Chromium/Electron. The
@@ -20,6 +21,17 @@ import {
  * stops. Lower = more sensitive (faster zoom per pinch). 250 was picked so
  * a deliberate ~½-second pinch traverses ~1 full discrete stop. */
 const PINCH_DELTA_PER_UNIT = 250
+
+/**
+ * Photos accent — macOS system blue, used as the selected-photo outline
+ * and (via `rgba(10, 132, 255, ...)` variants in PhotosSidebar.tsx) the
+ * active sidebar row gradient. Intentionally distinct from Notes (gold)
+ * and Arc (indigo) per design audit Slice 3 — each app carries its own
+ * accent identity. The RGB tuple `10, 132, 255` is the source of truth;
+ * `#0A84FF` is the hex form used here for solid fills. Don't introduce
+ * other "blue-ish" hexes as Photos selection.
+ */
+const PHOTOS_ACCENT = '#0A84FF'
 
 /* Row-height stops for zoom 1..5 (px). Zoom 1 is the square "contact sheet"
  * (smaller because the appeal is density). Zooms 2..5 grow moderately —
@@ -165,7 +177,7 @@ function PhotoTile({
         minWidth: 0,
         cursor: 'default',
         borderRadius: square ? 0 : 3,
-        outline: isSelected ? '2.5px solid #0A84FF' : 'none',
+        outline: isSelected ? `2.5px solid ${PHOTOS_ACCENT}` : 'none',
         outlineOffset: square ? 0 : -2,
         ...style,
       }}
@@ -225,8 +237,7 @@ function PhotoTile({
           style={{
             right: 4,
             bottom: 4,
-            fontFamily:
-              '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+            fontFamily: FONT_STACK,
             fontSize: 10,
             fontWeight: 600,
             color: '#fff',
@@ -382,8 +393,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           >
             <span
               style={{
-                fontFamily:
-                  '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                fontFamily: FONT_STACK,
                 fontSize: 12,
                 fontWeight: 400,
                 color: 'rgba(255,255,255,0.35)',
@@ -454,8 +464,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
                   >
                     <h2
                       style={{
-                        fontFamily:
-                          '"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                        fontFamily: DISPLAY_FONT_STACK,
                         fontSize: 22,
                         fontWeight: 700,
                         letterSpacing: '-0.4px',
@@ -470,8 +479,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
                       <div
                         style={{
                           marginTop: 2,
-                          fontFamily:
-                            '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                          fontFamily: FONT_STACK,
                           fontSize: 12,
                           fontWeight: 500,
                           letterSpacing: 0.1,
@@ -584,8 +592,7 @@ export function PhotosGrid({ topInset = 0 }: { topInset?: number }) {
           >
             <span
               style={{
-                fontFamily:
-                  '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+                fontFamily: FONT_STACK,
                 fontSize: 11,
                 fontWeight: 500,
                 letterSpacing: 0.2,

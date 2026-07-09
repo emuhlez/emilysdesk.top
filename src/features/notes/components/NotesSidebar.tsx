@@ -1,6 +1,20 @@
 import { useState } from 'react'
 import { useNotesStore } from '../../../stores/notes-store'
 
+/**
+ * Notes accent — darkened gold for the active-note row background.
+ *
+ * Notes intentionally diverges from Photos (macOS blue #0A84FF) and Arc
+ * (indigo #5046E5) per design audit Slice 3 — each app carries its own
+ * accent identity. The gold ramp in Notes is:
+ *   - `NOTES_ACCENT`      (#A48100)  selected note row bg (this file)
+ *   - `#FFC149`            link color   (`src/index.css:111`)
+ *   - `#FFB400`            checked checkbox fill (`src/index.css:225`)
+ * Treat those three values as one curated ramp; don't replace with
+ * other "gold-ish" hexes.
+ */
+const NOTES_ACCENT = '#A48100'
+
 function formatDate(ts: number) {
   const d = new Date(ts)
   const now = new Date()
@@ -69,7 +83,7 @@ export function NotesSidebar({
                 style={{
                   cursor: 'default',
                   background: isActive
-                    ? '#A48100'
+                    ? NOTES_ACCENT
                     : isHovered
                       ? 'rgba(255,255,255,0.04)'
                       : undefined,
@@ -81,7 +95,7 @@ export function NotesSidebar({
               >
                 <div className="flex items-baseline gap-2">
                   <span
-                    className="truncate text-[12px] font-semibold font-['SF_Pro',-apple-system,BlinkMacSystemFont,sans-serif]"
+                    className="truncate text-[12px] font-semibold"
                     style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.85)' }}
                   >
                     {note.title || 'Untitled'}

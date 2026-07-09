@@ -13,6 +13,12 @@ import { PhotosGrid } from './components/PhotosGrid'
 import { PhotoDetail } from './components/PhotoDetail'
 import { LiquidGlassDefs } from './components/LiquidGlassDefs'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+} from '../../constants/window-chrome'
 
 const TOOLBAR_H = 64
 
@@ -27,11 +33,9 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
+// Per-app floors stay local — Photos needs ~560x420 to keep grid + sidebar usable.
 const MIN_W = 560
 const MIN_H = 420
-const HANDLE = 6
 const SIDEBAR_DEFAULT = 205
 const SIDEBAR_MIN = 160
 const SIDEBAR_MAX = 360
@@ -139,10 +143,19 @@ export function PhotosWindow({
   const [rect, setRect] = useState<Rect>(() => {
     const vw = window.innerWidth
     const vh = window.innerHeight
-    const w = Math.min(960, vw - 40)
-    const h = Math.min(640, vh - MENU_BAR_H - DOCK_H - 40)
-    const x = Math.round((vw - w) / 2)
-    const y = MENU_BAR_H + Math.round((vh - MENU_BAR_H - DOCK_H - h) / 2)
+    // Mobile branch matches Notes/Arc: go full-bleed below MOBILE_BREAKPOINT
+    // so the grid + sidebar layout doesn't try to render at sub-560px
+    // viewport widths where it can't fit. MIN_W still enforces 560 once
+    // the user actively resizes via the corner handles, but the *initial*
+    // rect should be representative of the viewport — same contract used
+    // by NotesWindow.tsx:119-130 and ArcWindow.tsx initial-rect factory.
+    const isMobile = vw < MOBILE_BREAKPOINT
+    const w = isMobile ? vw : Math.min(960, vw - 40)
+    const h = isMobile
+      ? vh - MENU_BAR_H - DOCK_H
+      : Math.min(640, vh - MENU_BAR_H - DOCK_H - 40)
+    const x = isMobile ? 0 : Math.round((vw - w) / 2)
+    const y = MENU_BAR_H + (isMobile ? 0 : Math.round((vh - MENU_BAR_H - DOCK_H - h) / 2))
     return { x, y, w, h }
   })
 
@@ -340,8 +353,16 @@ export function PhotosWindow({
         className="relative flex h-full w-full min-h-0 flex-col overflow-hidden"
         style={{
           borderRadius: fullscreen ? 0 : 24,
-          /* Option A: subtle translucency so sidebar backdrop-filter samples real content behind the window (sim desktop wallpaper). */
-          background: fullscreen ? '#1E1E1E' : 'rgba(30, 30, 30, 0.92)',
+          /* Opaque #1E1E1E matches Notes and Arc per the unified surface
+           * system. Previously this was `rgba(30, 30, 30, 0.92)` when
+           * windowed so the sidebar's backdrop-filter could sample the
+           * wallpaper through the chrome ("Option A: subtle translucency").
+           * That created an aesthetic split between Photos and the other
+           * two windows — the unified-opaque decision keeps Photos
+           * grounded in the same surface tier. The Photos sidebar still
+           * has its own internal glass effect via backdrop-filter on its
+           * own rounded glass tile; that lift is preserved. */
+          background: '#1E1E1E',
           boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
         }}
       >

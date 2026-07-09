@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { FONT_STACK } from '../../styles/typography'
 
 /** Exact Apple logo path from assets/Menu Bar.svg, rendered without the
  *  Figma export's drop-shadow `<filter>`. The original Figma SVG wrapped the
@@ -157,7 +158,7 @@ export function MenuBar({
           paddingTop: 2,
           paddingLeft: 6,
           paddingRight: 6,
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           fontSize: 12,
           color: 'white',
           background: fullscreen ? 'rgba(0, 0, 0, 0.85)' : 'transparent',

@@ -2,9 +2,6 @@
 
 /* Global defaults (macOS-ish, with system-based light/dark). */
 :root {
-  /* Brand accent placeholder (override later with your actual brand). */
-  --brand-accent: 124 58 237; /* rgb */
-
   /* Let form controls and scrollbars follow system theme. */
   color-scheme: light dark;
 }
@@ -168,9 +165,10 @@ body {
  * is what actually shortens the visible track region. Chromium clamps the
  * thumb's `top` to that visible region, so the same margin-top is also set
  * on `::-webkit-scrollbar-thumb` so the resting thumb stays aligned with
- * the shortened track. `margin-bottom` is exposed via
- * `--photos-scrollbar-inset-bottom` for symmetry / future use (footer count
- * strip etc.); it defaults to 0.
+ * the shortened track. A symmetric `margin-bottom` hook used to exist via
+ * `--photos-scrollbar-inset-bottom`, but it was never set in JS — removed
+ * to drop dead surface area. Re-add it the same way if a footer count
+ * strip ever needs it.
  *
  * "Floating capsule" thumb (inset from the gutter walls) is built with
  * `border: 3px solid transparent` + `background-clip: padding-box` —
@@ -195,7 +193,6 @@ body {
 .photos-grid-scroll::-webkit-scrollbar-track {
   background: transparent;
   margin-top: var(--photos-scrollbar-inset-top, 0);
-  margin-bottom: var(--photos-scrollbar-inset-bottom, 0);
 }
 
 .photos-grid-scroll::-webkit-scrollbar-thumb {
@@ -204,7 +201,6 @@ body {
   border: 3px solid transparent;
   border-radius: 999px;
   margin-top: var(--photos-scrollbar-inset-top, 0);
-  margin-bottom: var(--photos-scrollbar-inset-bottom, 0);
 }
 
 .photos-grid-scroll::-webkit-scrollbar-thumb:hover {

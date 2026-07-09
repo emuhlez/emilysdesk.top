@@ -1,10 +1,29 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { TrafficLights } from '../../components/TrafficLights'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
 import { WINDOW_DROP_SHADOW } from '../../styles/window-shadow'
+import { FONT_STACK } from '../../styles/typography'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+} from '../../constants/window-chrome'
+import plusMediumSvg from '../../../assets/sf-symbols/plus--monochrome--medium.svg?raw'
+import trashMediumSvg from '../../../assets/sf-symbols/trash--monochrome--medium.svg?raw'
+
+/**
+ * Arc accent — indigo, used as the SearchDialog selected-row background.
+ * Intentionally distinct from Notes (gold) and Photos (macOS blue) per
+ * design audit Slice 3 — each app carries its own accent identity.
+ * The bookmark color palette in `SAVED_LINKS` below is a separate,
+ * data-driven brand-color list (LinkedIn, GitHub, etc.) — those aren't
+ * the Arc app accent and shouldn't be unified with this value.
+ */
+const ARC_ACCENT = '#5046E5'
 
 /* ─── helpers ─── */
 
@@ -105,15 +124,12 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
+// Per-app floors stay local — Arc keeps the viewport usable at 300x300.
 const MIN_W = 300
 const MIN_H = 300
-const HANDLE = 6
 const SIDEBAR_DEFAULT = 232
 const SIDEBAR_MIN = 160
 const SIDEBAR_MAX = 400
-const MOBILE_BREAKPOINT = 640
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -250,12 +266,41 @@ function toggleFolder(nodes: SidebarNode[], id: number): SidebarNode[] {
   })
 }
 
-function addTabToFolder(nodes: SidebarNode[], folderId: number, tab: TabNode): SidebarNode[] {
-  return nodes.map(n => {
-    if (n.type === 'folder' && n.id === folderId) return { ...n, children: [...n.children, tab], expanded: true }
-    if (n.type === 'folder') return { ...n, children: addTabToFolder(n.children, folderId, tab) }
-    return n
-  })
+/**
+ * Stable id for the dedicated "Other Tabs" section that the sidebar's
+ * footer plus button writes into. Lives outside the year folders so
+ * newly-added tabs don't get buried inside an existing year/topic
+ * tree. -100 is far below any id seed value used by the initial state
+ * (current floor is -8) so it can't collide.
+ */
+const NEW_LINKS_FOLDER_ID = -100
+
+/**
+ * Append a tab to the dedicated "Other Tabs" section, creating that
+ * section at the end of the root sidebar tree on first call. Lazy
+ * creation means the folder doesn't show up in the sidebar until the
+ * user has actually added at least one tab via the footer plus button,
+ * which avoids an empty "Other Tabs" header sitting under the year
+ * folders before the feature has been used. The label follows Arc's
+ * own vernacular for the un-categorized bucket rather than a generic
+ * "Links".
+ */
+function appendToNewLinksFolder(nodes: SidebarNode[], tab: TabNode): SidebarNode[] {
+  const idx = nodes.findIndex(n => n.type === 'folder' && n.id === NEW_LINKS_FOLDER_ID)
+  if (idx >= 0) {
+    const folder = nodes[idx] as FolderNode
+    const next = [...nodes]
+    next[idx] = { ...folder, children: [...folder.children, tab], expanded: true }
+    return next
+  }
+  const newFolder: FolderNode = {
+    type: 'folder',
+    id: NEW_LINKS_FOLDER_ID,
+    label: 'Other Tabs',
+    expanded: true,
+    children: [tab],
+  }
+  return [...nodes, newFolder]
 }
 
 function updateTabUrl(nodes: SidebarNode[], tabId: number, url: string): SidebarNode[] {
@@ -264,6 +309,21 @@ function updateTabUrl(nodes: SidebarNode[], tabId: number, url: string): Sidebar
     if (n.type === 'folder') return { ...n, children: updateTabUrl(n.children, tabId, url) }
     return n
   })
+}
+
+/**
+ * Is this tab one the user created themselves (it lives in the lazy
+ * "Other Tabs" bucket), as opposed to a saved/seeded bookmark in the
+ * year folders? Used to decide whether omnibox navigation should refine
+ * the tab in place (the user's own scratch tab) or spin off a brand-new
+ * one — so a saved piece of work is never overwritten by typing a new
+ * link or query while viewing it.
+ */
+function isUserCreatedTab(nodes: SidebarNode[], id: number): boolean {
+  const folder = nodes.find(
+    (n): n is FolderNode => n.type === 'folder' && n.id === NEW_LINKS_FOLDER_ID,
+  )
+  return !!folder?.children.some(c => c.type === 'tab' && c.id === id)
 }
 
 function findTab(nodes: SidebarNode[], id: number): TabNode | undefined {
@@ -470,7 +530,7 @@ function TabItem({ icon, label, active = false, bold = false, onClick, onClose }
     >
       <span className="shrink-0">{icon}</span>
       <span
-        className={`truncate text-[12px] font-['SF_Pro',-apple-system,BlinkMacSystemFont,sans-serif] ${bold ? 'font-semibold' : ''}`}
+        className={`truncate text-[12px] ${bold ? 'font-semibold' : ''}`}
         style={{ color: active || hovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}
       >
         {label}
@@ -615,48 +675,41 @@ function FolderOpenIcon() {
   )
 }
 
-function GlobeIcon() {
+function GlobeIcon({ opacity = 0.4 }: { opacity?: number }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0" style={{ minWidth: 16, minHeight: 16 }}>
-      <circle cx="8" cy="8" r="6" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
-      <ellipse cx="8" cy="8" rx="3" ry="6" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
-      <line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeOpacity="0.4" strokeWidth="1.2" />
+      <circle cx="8" cy="8" r="6" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
+      <ellipse cx="8" cy="8" rx="3" ry="6" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
+      <line x1="2" y1="8" x2="14" y2="8" stroke="white" strokeOpacity={opacity} strokeWidth="1.2" />
     </svg>
   )
 }
 
+/* Sidebar-footer glyphs render the canonical SF Symbols (plus / trash,
+ *  monochrome medium) from assets/sf-symbols/ to comply with the
+ *  use-sf-symbols-only project rule, replacing the previous hand-drawn
+ *  SVGs. The symbols paint with `currentColor`, so the wrapper's
+ *  `color` reproduces the prior `rgba(255,255,255,0.4)` tint, and the
+ *  14×14 box keeps the original footer sizing. */
 function PlusIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M7 0.5V13.5M0.5 7H13.5" stroke="white" strokeOpacity="0.4" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
+    <span
+      aria-label="New tab"
+      className="inline-flex shrink-0 [&>svg]:block"
+      style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.4)' }}
+      dangerouslySetInnerHTML={{ __html: plusMediumSvg }}
+    />
   )
 }
 
-function BinWithStarsIcon() {
+function TrashIcon() {
   return (
-    <svg width="14" height="14" viewBox="67 1042 15 18" fill="none">
-      {/* Bin body */}
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M70 1050C69.4477 1050 69 1050.45 69 1051V1057C69 1058.1 69.8954 1059 71 1059H79C80.1046 1059 81 1058.1 81 1057V1051C81 1050.45 80.5523 1050 80 1050H70ZM73.5 1051C73.2239 1051 73 1051.22 73 1051.5V1052.5C73 1052.78 73.2239 1053 73.5 1053H76.5C76.7761 1053 77 1052.78 77 1052.5V1051.5C77 1051.22 76.7761 1051 76.5 1051H73.5Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-      {/* Bin lid */}
-      <path
-        d="M80.2562 1046.01L80.9573 1047.41C81.2066 1047.91 80.844 1048.5 80.2865 1048.5H78.5H75H68.5C68.2239 1048.5 68 1048.28 68 1048V1047.62C68 1047.24 68.214 1046.89 68.5528 1046.72L70.6365 1045.68C70.8681 1045.57 71.0405 1045.36 71.1117 1045.11L71.1773 1044.88C71.4137 1044.05 72.5863 1044.05 72.8227 1044.88C72.9276 1045.25 73.2634 1045.5 73.6454 1045.5H75.6529C76.1417 1045.5 76.5744 1045.85 76.578 1046.34C76.5905 1048.05 75.5805 1048.5 75 1048.5H78.5V1046.43C78.5 1045.92 78.9151 1045.5 79.4271 1045.5C79.7782 1045.5 80.0992 1045.7 80.2562 1046.01Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-      {/* Lid dot */}
-      <path
-        d="M78 1044C78 1044.55 77.5523 1045 77 1045C76.4477 1045 76 1044.55 76 1044C76 1043.45 76.4477 1043 77 1043C77.5523 1043 78 1043.45 78 1044Z"
-        fill="white"
-        fillOpacity="0.4"
-      />
-    </svg>
+    <span
+      aria-label="Trash"
+      className="inline-flex shrink-0 [&>svg]:block"
+      style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.4)' }}
+      dangerouslySetInnerHTML={{ __html: trashMediumSvg }}
+    />
   )
 }
 
@@ -732,6 +785,21 @@ const SAVED_LINKS = [
   { label: 'Spotify – Emily', url: 'https://open.spotify.com/', icon: 'spotify', color: '#1DB954' },
 ] as const
 
+/**
+ * Open a URL in the user's real browser, bypassing our iframe / nav
+ * interception entirely. Sites with `frame-ancestors 'none'` CSP or
+ * fully-client-rendered SPAs (Next.js with empty SSR, etc.) won't
+ * render meaningfully inside ProxiedIframe; this is the escape hatch.
+ *
+ * In dev / web build: `window.open(_, '_blank')` opens a new browser
+ * tab. In Electron we'd want shell.openExternal — that path is wired
+ * up in the preload script's window.open shim if present; if not, the
+ * Electron build silently uses the same window.open fallback.
+ */
+function openInRealBrowser(url: string) {
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 function SitePreview({ url }: { url: string }) {
   const link = SAVED_LINKS.find(l => url.includes(new URL(l.url).hostname))
   const hostname = (() => { try { return new URL(url).hostname } catch { return url } })()
@@ -754,6 +822,22 @@ function SitePreview({ url }: { url: string }) {
           {hostname}
         </span>
       </div>
+      {/* Escape hatch for sites that don't iframe well. Stops the user
+       *  from staring at a blank rectangle with no path forward.
+       *
+       *  This is Arc's CTA pill recipe: `rounded-full` capsule (the
+       *  macOS prominent-button shape, deliberately distinct from the
+       *  `rounded-xl` tab rows and `rounded-md` URL chip), with the
+       *  full hover/pressed/focus-visible state set so it reads as a
+       *  real button. Reuse this recipe for any future Arc CTA. */}
+      <button
+        type="button"
+        onClick={() => openInRealBrowser(url)}
+        className="rounded-full px-4 py-2 text-[12px] font-medium text-white/85 outline-none transition-colors hover:bg-white/[0.08] active:bg-white/[0.04] focus-visible:ring-1 focus-visible:ring-white/30"
+        style={{ border: '1px solid rgba(255,255,255,0.18)', cursor: 'default' }}
+      >
+        Open in browser
+      </button>
     </div>
   )
 }
@@ -792,6 +876,12 @@ function parseYouTubeTimestamp(raw: string | null | undefined): number | null {
  * Build a YouTube `/embed/` URL for the given share URL, preserving the
  * timestamp (`t=` or `start=`) and any playlist context (`list`, `index`)
  * that the user pasted in. Returns null for non-YouTube URLs.
+ *
+ * Previously this function pulled the video ID out and threw away the
+ * rest of the URL — meaning `https://youtu.be/X?t=12915` and
+ * `https://youtube.com/watch?v=X&t=12915` both loaded the video from
+ * 0:00 because `start=` never made it onto the embed URL. The pasted
+ * timestamp now survives the watch -> embed transformation.
  *
  * Supported source URL shapes:
  *   - `youtube.com/watch?v=<id>`        canonical share URL
@@ -1080,6 +1170,34 @@ function ProxiedIframe({ url, dragging }: { url: string; dragging: boolean }) {
   )
 }
 
+/**
+ * Link-first omnibox heuristic: does this input look like a URL the user
+ * wants to navigate to (vs. a web search)? Anything without whitespace
+ * that carries a protocol, any dot (domain / IP / path), or a
+ * `localhost[:port]` host counts as a destination — so typing a link
+ * surfaces the "go to" row first. Multi-word input (which contains
+ * spaces) falls through to search.
+ */
+function looksLikeUrl(raw: string): boolean {
+  const q = raw.trim()
+  if (!q || /\s/.test(q)) return false
+  return (
+    /^https?:\/\//i.test(q) ||
+    /\./.test(q) ||
+    /^localhost(:\d+)?(\/|$)/i.test(q)
+  )
+}
+
+/**
+ * Normalize a URL-shaped input into a navigable absolute URL, prepending
+ * `https://` when the user omitted the scheme. Pair with `looksLikeUrl`
+ * so the rendered "go to" row and the committed navigation agree.
+ */
+function toNavUrl(raw: string): string {
+  const q = raw.trim()
+  return /^https?:\/\//i.test(q) ? q : 'https://' + q
+}
+
 function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (url: string) => void; onClose: () => void }) {
   const [query, setQuery] = useState(url)
   const [selectedIdx, setSelectedIdx] = useState(0)
@@ -1089,50 +1207,71 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
     setTimeout(() => inputRef.current?.select(), 0)
   }, [])
 
-  const q = query.toLowerCase()
-  const filtered = q
-    ? SAVED_LINKS.filter(l => l.label.toLowerCase().includes(q) || l.url.toLowerCase().includes(q))
+  // Unified, typed list of dropdown rows. Order mirrors the design and
+  // matches Arc/Chrome omniboxes: direct "go to <url>" first when the query
+  // is URL-shaped, then "search the web for <query>", then bookmark matches.
+  // selectedIdx indexes into this single list so the keyboard handler can
+  // dispatch by item.kind without ever re-classifying the raw query.
+  type Item =
+    | { kind: 'goto'; url: string }
+    | { kind: 'search'; query: string }
+    | { kind: 'bookmark'; link: typeof SAVED_LINKS[number] }
+
+  const trimmedQuery = query.trim()
+  const lowerQuery = trimmedQuery.toLowerCase()
+  const isUrlShape = looksLikeUrl(trimmedQuery)
+
+  const matchedBookmarks = trimmedQuery
+    ? SAVED_LINKS.filter(
+        l => l.label.toLowerCase().includes(lowerQuery) || l.url.toLowerCase().includes(lowerQuery),
+      )
     : SAVED_LINKS
 
-  const showGoogleOption = q.length > 0
-
-  const totalItems = filtered.length + (showGoogleOption ? 1 : 0)
+  const items: Item[] = []
+  if (isUrlShape) items.push({ kind: 'goto', url: trimmedQuery })
+  if (trimmedQuery.length > 0) items.push({ kind: 'search', query: trimmedQuery })
+  for (const link of matchedBookmarks) items.push({ kind: 'bookmark', link })
 
   const commit = useCallback((targetUrl?: string) => {
-    const finalTarget = targetUrl || query.trim()
+    const finalTarget = (targetUrl ?? '').trim() || query.trim()
     if (!finalTarget) { onClose(); return }
-    const u = finalTarget
-    if (/^https?:\/\//i.test(u)) {
-      // Already a full URL
-      onNavigate(u)
-    } else if (/^[^\s]+\.[^\s]+$/.test(u)) {
-      // Looks like a domain (e.g. "google.com", "foo.bar/path")
-      onNavigate('https://' + u)
+    if (/^https?:\/\//i.test(finalTarget)) {
+      onNavigate(finalTarget)
+    } else if (looksLikeUrl(finalTarget)) {
+      // URL-shaped but scheme-less — assume https. Mirrors `looksLikeUrl`
+      // used to populate the 'goto' row above, so the row's behavior
+      // matches what you see.
+      onNavigate(toNavUrl(finalTarget))
     } else {
-      // Treat as a search query
-      onNavigate(`https://www.google.com/search?q=${encodeURIComponent(u)}`)
+      onNavigate(`https://www.google.com/search?q=${encodeURIComponent(finalTarget)}`)
     }
   }, [query, onNavigate, onClose])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIdx(i => Math.min(i + 1, totalItems - 1))
+      setSelectedIdx(i => Math.min(i + 1, items.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIdx(i => Math.max(i - 1, 0))
     } else if (e.key === 'Enter') {
-      if (selectedIdx < filtered.length) {
-        commit(filtered[selectedIdx].url)
-      } else if (showGoogleOption) {
-        commit(`https://www.google.com/search?q=${encodeURIComponent(query)}`)
-      } else {
-        commit()
+      const item = items[selectedIdx]
+      if (!item) { commit(); return }
+      switch (item.kind) {
+        case 'goto':
+          commit(item.url)
+          return
+        case 'search':
+          commit(`https://www.google.com/search?q=${encodeURIComponent(item.query)}`)
+          return
+        case 'bookmark':
+          commit(item.link.url)
+          return
       }
     } else if (e.key === 'Escape') {
       onClose()
     }
-  }, [selectedIdx, filtered, showGoogleOption, query, commit, onClose, totalItems])
+  }, [items, selectedIdx, commit, onClose])
 
   return (
     <div
@@ -1144,7 +1283,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
         className="flex w-[min(500px,85%)] flex-col overflow-hidden rounded-xl"
         style={{
           background: 'rgba(28, 28, 30, 0.72)',
-          fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+          fontFamily: FONT_STACK,
           backdropFilter: 'blur(40px) saturate(180%)',
           WebkitBackdropFilter: 'blur(40px) saturate(180%)',
           boxShadow:
@@ -1158,7 +1297,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
             ref={inputRef}
             className="flex-1 bg-transparent text-[18px] font-semibold text-white/90 placeholder-white/30 outline-none"
             style={{
-              fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
+              fontFamily: FONT_STACK,
             }}
             value={query}
             onChange={(e) => { setQuery(e.target.value); setSelectedIdx(0) }}
@@ -1171,70 +1310,85 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
         <div style={{ height: 0.5, margin: '0 12px', background: 'rgba(255,255,255,0.08)' }} />
 
         {/* Results */}
-        <div className="flex max-h-[200px] flex-col gap-2 overflow-y-auto px-3 py-2.5">
-          {filtered.map((link, i) => (
-            <div
-              key={link.url}
-              className="flex items-center gap-2.5 rounded-lg px-3"
-              style={{
-                height: 32,
-                background: i === selectedIdx ? 'rgba(255,255,255,0.1)' : undefined,
-                cursor: 'default',
-              }}
-              onMouseEnter={() => setSelectedIdx(i)}
-              onClick={() => commit(link.url)}
-            >
-              <img
-                src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`}
-                width={16}
-                height={16}
-                className="shrink-0 rounded-sm"
-                alt=""
-              />
-              <span
-                className="truncate text-[12px] font-semibold text-white/80"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
+        <div className="flex max-h-[260px] flex-col gap-1 overflow-y-auto px-3 py-2.5">
+          {items.map((item, i) => {
+            const selected = i === selectedIdx
+            const rowStyle: React.CSSProperties = {
+              height: 40,
+              background: selected ? ARC_ACCENT : undefined,
+              cursor: 'default',
+            }
+            const labelClass = 'truncate text-[13px] font-semibold'
+            const labelStyle: React.CSSProperties = {
+              color: selected ? '#fff' : 'rgba(255,255,255,0.85)',
+              fontFamily: FONT_STACK,
+            }
+
+            if (item.kind === 'goto') {
+              return (
+                <div
+                  key={`goto-${i}`}
+                  className="flex items-center gap-2.5 rounded-lg px-3"
+                  style={rowStyle}
+                  onMouseEnter={() => setSelectedIdx(i)}
+                  onClick={() => commit(item.url)}
+                >
+                  <GlobeIcon opacity={selected ? 1 : 0.55} />
+                  <span className={labelClass} style={labelStyle}>{item.url}</span>
+                </div>
+              )
+            }
+
+            if (item.kind === 'search') {
+              const iconStroke = selected ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.45)'
+              return (
+                <div
+                  key={`search-${i}`}
+                  className="flex items-center gap-2.5 rounded-lg px-3"
+                  style={rowStyle}
+                  onMouseEnter={() => setSelectedIdx(i)}
+                  onClick={() => commit(`https://www.google.com/search?q=${encodeURIComponent(item.query)}`)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                    <circle cx="7" cy="7" r="5.5" stroke={iconStroke} strokeWidth="1.4" />
+                    <path d="M11 11L14.5 14.5" stroke={iconStroke} strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  <span className={labelClass} style={labelStyle}>{item.query}</span>
+                </div>
+              )
+            }
+
+            const link = item.link
+            const subColor = selected ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)'
+            return (
+              <div
+                key={`bookmark-${link.url}`}
+                className="flex items-center gap-2.5 rounded-lg px-3"
+                style={rowStyle}
+                onMouseEnter={() => setSelectedIdx(i)}
+                onClick={() => commit(link.url)}
               >
-                {link.label}
-              </span>
-              <span className="text-[12px] text-white/20">—</span>
-              <span
-                className="truncate text-[12px] text-white/20"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
-              >
-                {link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-              </span>
-            </div>
-          ))}
-          {showGoogleOption && (
-            <div
-              className="flex items-center gap-2.5 rounded-lg px-3"
-              style={{
-                height: 32,
-                background: selectedIdx === filtered.length ? 'rgba(255,255,255,0.1)' : undefined,
-                cursor: 'default',
-              }}
-              onMouseEnter={() => setSelectedIdx(filtered.length)}
-              onClick={() => commit(`https://www.google.com/search?q=${encodeURIComponent(query)}`)}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
-                <path d="M11 11L14.5 14.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" />
-              </svg>
-              <span
-                className="truncate text-[12px] font-semibold text-white/80"
-                style={{
-                  fontFamily: '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif',
-                }}
-              >
-                Search Google for "{query}"
-              </span>
-            </div>
-          )}
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=32`}
+                  width={16}
+                  height={16}
+                  className="shrink-0 rounded-sm"
+                  alt=""
+                />
+                <span className={labelClass} style={labelStyle}>{link.label}</span>
+                <span className="text-[13px]" style={{ color: subColor }}>—</span>
+                <span
+                  className="truncate text-[13px]"
+                  style={{
+                    color: subColor,
+                    fontFamily: FONT_STACK,
+                  }}
+                >
+                  {link.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
@@ -1244,7 +1398,7 @@ function SearchDialog({ url, onNavigate, onClose }: { url: string; onNavigate: (
 function TabCloseButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
   return (
     <div
-      className="ml-auto flex shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/tab:opacity-100 hover:bg-white/10"
+      className="ml-auto flex shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/tab:opacity-100 hover:bg-white/[0.08]"
       style={{ width: 20, height: 20 }}
       onClick={onClick}
     >
@@ -1289,10 +1443,15 @@ function Sidebar({
   onFullscreen?: () => void
 }) {
   return (
-    <div className="relative flex h-full shrink-0 flex-col gap-3 pb-3 pl-2.5 pr-0 pt-2.5" style={{ width }}>
-      {/* Title bar – traffic lights + sidebar toggle, aligned with first tile */}
+    <div className="relative flex h-full shrink-0 flex-col gap-3 pb-5 pl-2.5 pr-0 pt-2.5" style={{ width }}>
+      {/* Title bar – traffic lights + sidebar toggle, aligned with first tile.
+       *  Title bar's `pl-2.5` (10px) plus the column's `pl-2.5` (10px) puts
+       *  the traffic lights at 20px from the window's outer edge, matching
+       *  Photos `TRAFFIC_LEFT_INSET` and macOS canonical positioning. The
+       *  rest of the sidebar (pinned tabs, tab list, footer) keeps the
+       *  column-level 10px so it doesn't shift along with the title bar. */}
       <div
-        className="flex shrink-0 items-center gap-3 px-1"
+        className="flex shrink-0 items-center gap-3 pl-2.5 pr-1"
         style={{ height: 36, cursor: 'default', touchAction: 'none' }}
         onPointerDown={onDragStart}
       >
@@ -1313,8 +1472,14 @@ function Sidebar({
           />
         ))}
       </div>
-      <div className="flex items-center justify-between">
-        <BinWithStarsIcon />
+      {/* Sidebar footer: trash + new-tab. The column is `pl-2.5 pr-0`
+       *  (10px left, flush right), so this row's `pl-2.5 pr-5` lands both
+       *  glyphs at 20px from their respective window/sidebar edges: trash
+       *  at 10+10 from the window left (matching the traffic-light inset)
+       *  and the plus at 0+20 from the sidebar's right edge — symmetric
+       *  instead of the plus hugging the edge. */}
+      <div className="flex items-center justify-between pl-2.5 pr-5">
+        <TrashIcon />
         <div style={{ cursor: 'default' }} onClick={onNewTab}>
           <PlusIcon />
         </div>
@@ -1360,9 +1525,6 @@ export function ArcWindow({
   })
 
   const rectRef = useRef(rect)
-  useEffect(() => {
-    rectRef.current = rect
-  })
 
   /* ── navigation state (works for both webview & iframe) ── */
   const INITIAL_URL = 'https://www.youtube.com/watch?v=8IcYpOl4Sdk&t=755'
@@ -1387,10 +1549,6 @@ export function ArcWindow({
 
   const historyRef = useRef(history)
   const historyIndexRef = useRef(historyIndex)
-  useEffect(() => {
-    historyRef.current = history
-    historyIndexRef.current = historyIndex
-  })
 
   const navigate = useCallback((newUrl: string) => {
     const idx = historyIndexRef.current
@@ -1423,9 +1581,6 @@ export function ArcWindow({
 
   // Listen for navigation events from proxied iframes
   const navigateRef = useRef(navigate)
-  useEffect(() => {
-    navigateRef.current = navigate
-  })
 
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -1498,11 +1653,22 @@ export function ArcWindow({
         { type: 'tab', id: -3, url: 'https://about.roblox.com/newsroom/2026/04/roblox-studio-going-agentic', title: 'Roblox Studio is Going Agentic' },
         { type: 'tab', id: -5, url: 'https://devforum.roblox.com/t/announcing-planning-mode-for-roblox-assistant/4580715', title: 'Announcing Planning Mode for Roblox Assistant' },
       ] },
+      { type: 'folder', id: -9, label: 'Folders', expanded: false, children: [
+        { type: 'tab', id: -10, url: 'https://devforum.roblox.com/t/beta-keep-your-assets-organized-with-asset-manager-folders/4656525', title: '[Beta] Keep Your Assets Organized With Asset Manager Folders' },
+      ] },
     ] },
     { type: 'folder', id: -4, label: '2025', expanded: true, children: [
       { type: 'folder', id: -6, label: 'Reimport', expanded: false, children: [
         { type: 'tab', id: -7, url: 'https://www.youtube.com/watch?v=PVlCHE9pc50&t=12915', title: 'Opening Keynote | RDC 2025' },
         { type: 'tab', id: -8, url: 'https://create.roblox.com/docs/art/modeling/reimport', title: 'Reimport' },
+      ] },
+    ] },
+    { type: 'folder', id: -11, label: '2024', expanded: false, children: [
+      { type: 'folder', id: -12, label: 'Sound Effects', expanded: false, children: [
+        { type: 'tab', id: -13, url: 'https://devforum.roblox.com/t/public-sound-effects-upload-are-now-available-for-creators/2980704', title: 'Public Sound Effects Upload Are Now Available for Creators' },
+      ] },
+      { type: 'folder', id: -14, label: 'Creator Store', expanded: false, children: [
+        { type: 'tab', id: -15, url: 'https://devforum.roblox.com/t/creator-store-buy-and-sell-plug-ins-with-real-world-currency/2923445', title: 'Creator Store: Buy and Sell Plug-Ins with Real-World Currency' },
       ] },
     ] },
   ])
@@ -1569,7 +1735,18 @@ export function ArcWindow({
   const topbarColor = useFaviconColor(currentUrl)
 
   const sidebarWidthRef = useRef(sidebarWidth)
-  useEffect(() => {
+
+  // Mirror the latest reactive values into refs so post-commit readers
+  // (drag handlers, the postMessage navigation listener, sidebar resize)
+  // don't capture stale closures. Written in a layout effect rather than
+  // during render: that satisfies react-hooks/refs while keeping each
+  // useRef directly visible to the React Compiler, so the refs stay
+  // recognized as stable (non-reactive) deps in the useCallbacks below.
+  useLayoutEffect(() => {
+    rectRef.current = rect
+    historyRef.current = history
+    historyIndexRef.current = historyIndex
+    navigateRef.current = navigate
     sidebarWidthRef.current = sidebarWidth
   })
 
@@ -1674,7 +1851,16 @@ export function ArcWindow({
       }}
       onPointerDown={onFocus}
     >
-      {/* Window chrome */}
+      {/* Window chrome — Arc intentionally diverges from Notes/Photos'
+       *  unified opaque surface. The translucent/tinted glass recipe
+       *  (rgba(4,6,24,0.5) + 32.5px backdrop-blur, 18px radius, 0.5px
+       *  @ 0.12 inline rim on top of WINDOW_DROP_SHADOW) is core to
+       *  Arc's identity as a browser window — the wallpaper bleed
+       *  through the chrome reads as "this app is its own surface
+       *  tier" in a way that opaque #1E1E1E does not. The first pass
+       *  of design audit Slice 3 unified Arc into the Notes/Photos
+       *  system; that change was reverted here. Notes and Photos keep
+       *  the opaque #1E1E1E + WINDOW_SHADOW + 1px@0.22 rim recipe. */}
       <div
         ref={windowRef}
         className="flex h-full w-full overflow-hidden"
@@ -1795,15 +1981,34 @@ export function ArcWindow({
           url={currentUrl}
           onNavigate={(u) => {
             navigate(u)
-            if (pendingNewTab.current) {
+
+            // Add a brand-new tab to the dedicated "Other Tabs" section
+            // (lazy-created on first use) rather than burying it inside an
+            // existing year folder, then focus it.
+            const addNewTab = () => {
               const id = nextNodeId.current++
               const newTab: TabNode = { type: 'tab', id, url: u }
-              // Add new tab inside the first folder (Tools)
-              setSidebarItems(prev => addTabToFolder(prev, -1, newTab))
+              setSidebarItems(prev => appendToNewLinksFolder(prev, newTab))
               setActiveTabId(id)
+            }
+
+            if (pendingNewTab.current) {
+              // Plus button: always a brand-new tab.
+              addNewTab()
               pendingNewTab.current = false
-            } else if (activeTabId != null) {
-              setSidebarItems(prev => updateTabUrl(prev, activeTabId, u))
+            } else {
+              const active =
+                activeTabId != null ? findTab(sidebarItems, activeTabId) : undefined
+              if (active && active.url === u) {
+                // Same destination — nothing changes; don't spawn a duplicate.
+              } else if (activeTabId != null && isUserCreatedTab(sidebarItems, activeTabId)) {
+                // The user's own scratch tab — refine it in place.
+                setSidebarItems(prev => updateTabUrl(prev, activeTabId, u))
+              } else {
+                // Saved/seeded work (or no active tab): leave that tab's page
+                // untouched and create a NEW sidebar link for the typed URL.
+                addNewTab()
+              }
             }
             setSearchOpen(false)
           }}
@@ -1811,14 +2016,19 @@ export function ArcWindow({
         />
       )}
 
-      {/* Resize handles */}
-      {ALL_DIRS.map((dir) => (
-        <div
-          key={dir}
-          style={{ ...handleStyle(dir), touchAction: 'none' }}
-          onPointerDown={(e) => startDrag(dir, e)}
-        />
-      ))}
+      {/* Resize handles — gated by !fullscreen to match Notes/Photos.
+       *  In fullscreen the window is locked at viewport bounds; live
+       *  resize handles would let the user drag the edges and resize
+       *  out of fullscreen invisibly, leaving the window in a stale
+       *  rect on the next frame. */}
+      {!fullscreen &&
+        ALL_DIRS.map((dir) => (
+          <div
+            key={dir}
+            style={{ ...handleStyle(dir), touchAction: 'none' }}
+            onPointerDown={(e) => startDrag(dir, e)}
+          />
+        ))}
     </div>
   )
 }

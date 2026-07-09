@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import { DISPLAY_FONT_STACK } from '../../styles/typography'
 
 /**
  * macOS-style lock screen. Visually identical to the inline splash in
@@ -32,9 +33,9 @@ const WALLPAPER_URL = '/wallpaper.jpg'
 const EXIT_MS = 500
 
 // Fixed SVG canvas for the clock. Wide enough to hold any HH:MM at
-// `fontSize: 180` SF Pro Display Semibold (the widest realistic time
-// "12:38" measures ≈ 540px), tall enough for the `line-height: normal`
-// line box (180 × 1.22 ≈ 220px). The visible glyphs are centered inside
+// `fontSize: 160` SF Pro Display Semibold (the widest realistic time
+// "12:38" measures ≈ 400px), tall enough for the `line-height: normal`
+// line box (160 × 1.22 ≈ 196px). The visible glyphs are centered inside
 // via `text-anchor="middle"` / `dominantBaseline="central"`, so the
 // container is wider than the glyphs but never wraps or clips them.
 const CLOCK_SVG_W = 600
@@ -186,8 +187,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
         backgroundPosition: 'center, center',
         color: '#fff',
         paddingTop: 'env(safe-area-inset-top)',
-        fontFamily:
-          '"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+        fontFamily: DISPLAY_FONT_STACK,
         opacity: exiting ? 0 : 1,
         transform: exiting && !reduceMotion ? 'scale(1.02)' : 'scale(1)',
         filter: exiting && !reduceMotion ? 'blur(8px)' : 'none',
@@ -345,7 +345,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
         aria-hidden
         width={CLOCK_SVG_W}
         height={CLOCK_SVG_H}
-        style={{ display: 'block', marginTop: -8, overflow: 'visible' }}
+        style={{ display: 'block', marginTop: -36, overflow: 'visible' }}
       >
         <defs>
           <filter
@@ -438,9 +438,9 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
             y="50%"
             textAnchor="middle"
             dominantBaseline="central"
-            fontFamily='"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+            fontFamily={DISPLAY_FONT_STACK}
             fontWeight={600}
-            fontSize={180}
+            fontSize={160}
             fill="#ffffff"
             filter="url(#lockscreen-glyph-round)"
           >

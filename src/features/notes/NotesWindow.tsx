@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
@@ -6,6 +6,12 @@ import { NotesSidebar } from './components/NotesSidebar'
 import { NotesToolbar } from './components/NotesToolbar'
 import { NotesEditor } from './components/NotesEditor'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+} from '../../constants/window-chrome'
 
 /* ─── resize types ─── */
 
@@ -18,15 +24,12 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
+// Per-app floors stay local — Notes needs ~300x400 for the editor column.
 const MIN_W = 300
 const MIN_H = 400
-const HANDLE = 6
 const SIDEBAR_DEFAULT = 260
 const SIDEBAR_MIN = 180
 const SIDEBAR_MAX = 400
-const MOBILE_BREAKPOINT = 640
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -127,9 +130,6 @@ export function NotesWindow({
   })
 
   const rectRef = useRef(rect)
-  useEffect(() => {
-    rectRef.current = rect
-  })
 
   const closeApp = useAppStore((s) => s.closeApp)
   const setFullscreenApp = useAppStore((s) => s.setFullscreenApp)
@@ -191,7 +191,13 @@ export function NotesWindow({
   /* ── drag & resize ── */
 
   const sidebarWidthRef = useRef(sidebarWidth)
-  useEffect(() => {
+
+  // Mirror latest rect + sidebar width into refs for post-commit drag
+  // handlers without stale closures. Layout-effect write (not during
+  // render) keeps react-hooks/refs happy while leaving the useRefs
+  // visible to the React Compiler as stable deps.
+  useLayoutEffect(() => {
+    rectRef.current = rect
     sidebarWidthRef.current = sidebarWidth
   })
 
