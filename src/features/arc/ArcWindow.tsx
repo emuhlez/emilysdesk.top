@@ -291,6 +291,21 @@ function updateTabUrl(nodes: SidebarNode[], tabId: number, url: string): Sidebar
   })
 }
 
+/**
+ * Is this tab one the user created themselves (it lives in the lazy
+ * "Other Tabs" bucket), as opposed to a saved/seeded bookmark in the
+ * year folders? Used to decide whether omnibox navigation should refine
+ * the tab in place (the user's own scratch tab) or spin off a brand-new
+ * one — so a saved piece of work is never overwritten by typing a new
+ * link or query while viewing it.
+ */
+function isUserCreatedTab(nodes: SidebarNode[], id: number): boolean {
+  const folder = nodes.find(
+    (n): n is FolderNode => n.type === 'folder' && n.id === NEW_LINKS_FOLDER_ID,
+  )
+  return !!folder?.children.some(c => c.type === 'tab' && c.id === id)
+}
+
 function findTab(nodes: SidebarNode[], id: number): TabNode | undefined {
   for (const n of nodes) {
     if (n.type === 'tab' && n.id === id) return n
@@ -1587,11 +1602,22 @@ export function ArcWindow({
         { type: 'tab', id: -3, url: 'https://about.roblox.com/newsroom/2026/04/roblox-studio-going-agentic', title: 'Roblox Studio is Going Agentic' },
         { type: 'tab', id: -5, url: 'https://devforum.roblox.com/t/announcing-planning-mode-for-roblox-assistant/4580715', title: 'Announcing Planning Mode for Roblox Assistant' },
       ] },
+      { type: 'folder', id: -9, label: 'Folders', expanded: false, children: [
+        { type: 'tab', id: -10, url: 'https://devforum.roblox.com/t/beta-keep-your-assets-organized-with-asset-manager-folders/4656525', title: '[Beta] Keep Your Assets Organized With Asset Manager Folders' },
+      ] },
     ] },
     { type: 'folder', id: -4, label: '2025', expanded: true, children: [
       { type: 'folder', id: -6, label: 'Reimport', expanded: false, children: [
         { type: 'tab', id: -7, url: 'https://www.youtube.com/watch?v=PVlCHE9pc50&t=12915', title: 'Opening Keynote | RDC 2025' },
         { type: 'tab', id: -8, url: 'https://create.roblox.com/docs/art/modeling/reimport', title: 'Reimport' },
+      ] },
+    ] },
+    { type: 'folder', id: -11, label: '2024', expanded: false, children: [
+      { type: 'folder', id: -12, label: 'Sound Effects', expanded: false, children: [
+        { type: 'tab', id: -13, url: 'https://devforum.roblox.com/t/public-sound-effects-upload-are-now-available-for-creators/2980704', title: 'Public Sound Effects Upload Are Now Available for Creators' },
+      ] },
+      { type: 'folder', id: -14, label: 'Creator Store', expanded: false, children: [
+        { type: 'tab', id: -15, url: 'https://devforum.roblox.com/t/creator-store-buy-and-sell-plug-ins-with-real-world-currency/2923445', title: 'Creator Store: Buy and Sell Plug-Ins with Real-World Currency' },
       ] },
     ] },
   ])
@@ -1904,19 +1930,34 @@ export function ArcWindow({
           url={currentUrl}
           onNavigate={(u) => {
             navigate(u)
-            if (pendingNewTab.current) {
+
+            // Add a brand-new tab to the dedicated "Other Tabs" section
+            // (lazy-created on first use) rather than burying it inside an
+            // existing year folder, then focus it.
+            const addNewTab = () => {
               const id = nextNodeId.current++
               const newTab: TabNode = { type: 'tab', id, url: u }
-              // Route plus-button additions into the dedicated
-              // "Other Tabs" section at the bottom of the sidebar rather
-              // than burying them inside an existing year folder. The
-              // section is lazy-created on first use, then reused for
-              // subsequent tabs.
               setSidebarItems(prev => appendToNewLinksFolder(prev, newTab))
               setActiveTabId(id)
+            }
+
+            if (pendingNewTab.current) {
+              // Plus button: always a brand-new tab.
+              addNewTab()
               pendingNewTab.current = false
-            } else if (activeTabId != null) {
-              setSidebarItems(prev => updateTabUrl(prev, activeTabId, u))
+            } else {
+              const active =
+                activeTabId != null ? findTab(sidebarItems, activeTabId) : undefined
+              if (active && active.url === u) {
+                // Same destination — nothing changes; don't spawn a duplicate.
+              } else if (activeTabId != null && isUserCreatedTab(sidebarItems, activeTabId)) {
+                // The user's own scratch tab — refine it in place.
+                setSidebarItems(prev => updateTabUrl(prev, activeTabId, u))
+              } else {
+                // Saved/seeded work (or no active tab): leave that tab's page
+                // untouched and create a NEW sidebar link for the typed URL.
+                addNewTab()
+              }
             }
             setSearchOpen(false)
           }}
