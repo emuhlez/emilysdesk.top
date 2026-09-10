@@ -31,9 +31,7 @@ export const MOBILE_BREAKPOINT = 640
 /**
  * Opaque title-bar / unified-toolbar background for dark-mode windows.
  * Notes' toolbar and Roblox Studio's title bar both paint this flat tone
- * over the `#1E1E1E` window body. Centralized so we don't accumulate
- * near-duplicate one-off chrome tones (Roblox previously shipped a lone
- * `#1C1C1E`). Photos' toolbar is intentionally transparent-over-body and
- * does not use this.
+ * over their window bodies. Photos' toolbar is intentionally transparent-
+ * over-body and does not use this.
  */
 export const TITLE_BAR_BG = '#222222'

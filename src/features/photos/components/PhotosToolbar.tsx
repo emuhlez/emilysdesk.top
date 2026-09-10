@@ -1,7 +1,8 @@
-import type { CSSProperties, PropsWithChildren, ReactNode } from 'react'
-import { Children, Fragment, createContext, useContext, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { LayoutGroup, motion } from 'framer-motion'
-import { FONT_STACK, WINDOW_TITLE_STYLE } from '../../../styles/typography'
+import { FONT_STACK, WINDOW_TITLE_STYLE, WINDOW_SUBTITLE_STYLE } from '../../../styles/typography'
+import { GlassCluster, GlassButton } from '../../../components/liquid-glass/GlassControls'
 import infoCircleMediumSvg from '../../../../assets/sf-symbols/info.circle--monochrome--medium.svg?raw'
 import heartMediumSvg from '../../../../assets/sf-symbols/heart--monochrome--medium.svg?raw'
 import personCropRectangleSvg from '../../../../assets/sf-symbols/person.crop.rectangle--monochrome--medium.svg?raw'
@@ -27,8 +28,8 @@ import {
 const ZOOM_W = 77          // 2×30 + 1 gap + 16 padding
 const VIEW_TABS_W = 240    // 3 tabs × ~76 + 2×6 gap + 16 padding (worst case)
 const ICONS_3_W = 108      // 3×30 + 2×1 gap + 16 padding (no dividers)
-const SEARCH_W = 46        // 30 + 16 padding
-const CHEVRON_W = 46       // matches search button width
+const SEARCH_W = 40        // 30 + 5×2 padding (circle)
+const CHEVRON_W = 40       // matches search button width
 const CLUSTER_GAP = 6
 const TITLE_W_ESTIMATE = 140 // "Library" + date subtitle, rough upper bound
 const TOOLBAR_RIGHT_PADDING = 20
@@ -90,260 +91,6 @@ function formatDateRange(dates: Date[]): string {
   return `${startStr} – ${endStr}`
 }
 
-/* When a `GlassCluster` wraps exactly ONE child button, the cluster paints
- * a hover overlay that fills the whole pill (instead of just the inner
- * 30×30 button rect). To avoid double-tinting (cluster overlay + button
- * overlay both painting on the same pixels), the cluster signals down
- * via context that the inner button should suppress its own overlay.
- *
- * Multi-button clusters set this to `false` and per-button hovers behave
- * as before. Bare clusters (no glass chrome) also opt out — there's no
- * resting pill to fill. */
-const SingleClusterHoverContext = createContext(false)
-
-function GlassCluster({
-  children,
-  style,
-  edge = 'soft',
-  bare = false,
-  dividers = true,
-  fadeDividersOnHover = false,
-  role,
-}: PropsWithChildren<{
-  style?: CSSProperties
-  edge?: 'soft' | 'strong' | 'none'
-  /** When true, render the cluster as a transparent shell (no glass background, no shadow,
-   *  no backdrop filter). Used when the cluster sits on top of another glass surface
-   *  (e.g. the sidebar) and we don't want a second floating chip layered on top. */
-  bare?: boolean
-  /** When false, suppress the thin vertical separators between adjacent children. */
-  dividers?: boolean
-  /** When true, the cluster's inter-child dividers fade to 0 opacity on
-   *  cluster hover (transition: opacity 140ms ease). Used by the segmented
-   *  zoom +/− pair so the two halves visually merge during hover without
-   *  the layout-shifting 36-px swallow-circle hover. Layout is unchanged —
-   *  the divider's flex contribution (width + margin) is reserved either
-   *  way, only opacity animates. */
-  fadeDividersOnHover?: boolean
-  /** ARIA role forwarded to the outer container (e.g. "tablist" for the
-   *  view-tabs cluster). Default: undefined → no role attribute emitted. */
-  role?: string
-}>) {
-  const [hovered, setHovered] = useState(false)
-  const dividerOpacity = fadeDividersOnHover && hovered ? 0 : 1
-  /* When the cluster has exactly one child, the cluster IS the button — so
-   * the hover overlay should fill the whole pill, not just the inner 30×30
-   * rect. We render a pill-sized overlay here and tell the child button to
-   * suppress its own overlay via context. Bare clusters opt out (no resting
-   * pill to fill = no hover pill that would suddenly appear out of nothing). */
-  const fillHover = Children.count(children) === 1 && !bare
-  /* macOS Tahoe 26 Liquid-Glass pill tuning.
-     - Heavier backdrop (blur 20 / saturate 180%) so the refraction reads as
-       glass over content rather than frosted plastic.
-     - Lighter, near-flat tint (≤8% white) so colorful photo content shows
-       through — the gradient is intentionally subtle, not a glossy "shine."
-     - Single hairline highlight at the top edge (single light source from
-       above), no bottom inset. Replaces the older 3-layer cake.
-     - Tight, two-stop shadow: contact (1px) + soft ambient (8px @ low alpha)
-       instead of a single 12px soft cast (Sonoma-era idiom).
-     - SVG edge-refraction filter (`photos-lg-edge`) is unchanged — that's the
-       Tier 2 piece that gives the pills their actual liquid quality. */
-  return (
-    <div
-      role={role}
-      style={{
-        // `position: relative` establishes the containing block for the
-        // single-child fillHover overlay below. `display: inline-flex`
-        // doesn't on its own.
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        // shrink-0 so the cluster itself can never be squeezed by a narrower
-        // toolbar — the responsive collapse system (showIconsCluster /
-        // showActionsCluster / showOverflow above) is the only thing allowed
-        // to remove clusters from the row; flex compression must not.
-        flexShrink: 0,
-        gap: 1,
-        padding: '5px 8px',
-        borderRadius: 999,
-        background: bare
-          ? 'transparent'
-          : 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0.07) 100%)',
-        backdropFilter: bare ? undefined : 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: bare ? undefined : 'blur(20px) saturate(180%)',
-        boxShadow: bare
-          ? undefined
-          : 'inset 0 0.5px 0 rgba(255,255,255,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.10), 0 1px 1px rgba(0,0,0,0.18), 0 6px 14px -8px rgba(0,0,0,0.30)',
-        filter: bare
-          ? undefined
-          : edge === 'strong'
-            ? 'url(#photos-lg-edge-strong)'
-            : edge === 'soft'
-              ? 'url(#photos-lg-edge)'
-              : undefined,
-        isolation: 'isolate',
-        ...style,
-      }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {fillHover && (
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 999,
-            background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
-            transition: 'background 140ms ease',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-      <SingleClusterHoverContext.Provider value={fillHover}>
-        {Children.toArray(children).map((child, i) => (
-          <Fragment key={i}>
-            {i > 0 && dividers && (
-              <span
-                aria-hidden
-                style={{
-                  width: 1,
-                  height: 14,
-                  alignSelf: 'center',
-                  background: 'rgba(255,255,255,0.14)',
-                  borderRadius: 0.5,
-                  flexShrink: 0,
-                  margin: '0 1px',
-                  opacity: dividerOpacity,
-                  transition: 'opacity 140ms ease',
-                }}
-              />
-            )}
-            {child}
-          </Fragment>
-        ))}
-      </SingleClusterHoverContext.Provider>
-    </div>
-  )
-}
-
-/**
- * Toolbar icon button with a hover overlay.
- *
- * Default shape: the hover overlay is a **pill matching the button rectangle**
- * (`width × height`, `border-radius: min(width, height) / 2`) — it fills the
- * whole button so the hover reads as a confident chip, mirroring the
- * "hover fills the whole button" rule used across the Notes toolbar
- * (see src/features/notes/components/NotesToolbar.tsx). The cluster already
- * owns the rim treatment, so no per-button rim is added.
- *
- * Canonical zoom-pair pattern: the +/− zoom buttons in the Zoom `GlassCluster`
- * use the **default 30×30 pill hover**. The cluster opts in to
- * `fadeDividersOnHover`, so the 1×14 px divider between the two halves
- * fades to 0 opacity (transition 140ms ease) while the pointer is inside
- * the cluster — the two halves visually merge into a single segmented chip
- * during hover and split again on hover-out. Same uniform 30×30 hover as
- * every other toolbar icon, no layout shift (the divider's flex
- * contribution is reserved either way; only opacity animates).
- *
- * Escape hatch (currently unused): callers can still pass `hoverDiameter` to
- * force a centered circular overlay of that exact diameter — e.g. for a
- * future segmented control where the hover does need to consume the divider.
- * Trusted as-is; caller is responsible for fitting it inside the parent
- * cluster's outer height.
- */
-function GlassButton({
-  onClick,
-  children,
-  width = 30,
-  height = 30,
-  hoverDiameter,
-  disabled = false,
-}: PropsWithChildren<{
-  onClick?: () => void
-  width?: number
-  height?: number
-  /** When set, the hover overlay is rendered as a centered circle of this
-   *  diameter (in px) instead of a button-rect-filling pill. Used by
-   *  segmented controls (zoom +/−) to size the hover wide enough to consume
-   *  the inter-button divider. Trusted as-is — caller must fit it inside
-   *  the parent cluster's height. When omitted, the hover overlay is a pill
-   *  matching the button's outer rectangle. */
-  hoverDiameter?: number
-  /** When true, the button is non-interactive: glyph dims to ~32% (matching
-   *  the disabled SF Symbol opacity used in macOS Photos.app's zoom control),
-   *  hover background is suppressed, and click is a no-op. */
-  disabled?: boolean
-}>) {
-  const [hovered, setHovered] = useState(false)
-  const isCircle = hoverDiameter !== undefined
-  /* When this button is the sole child of a `GlassCluster`, the cluster
-   * paints a pill-sized hover overlay covering the whole chip. Suppress
-   * the per-button overlay in that case so the two don't double-tint
-   * the inner button rect (the layered look the user has rejected). */
-  const inFillHoverCluster = useContext(SingleClusterHoverContext)
-  const showHover = hovered && !disabled && !inFillHoverCluster
-  return (
-    <div
-      className="flex items-center justify-center"
-      style={{
-        position: 'relative',
-        // width/height set the visual box, but as a flex child the outer div
-        // would otherwise be free to compress below those values under
-        // main-axis pressure (flex-basis: auto). shrink-0 + min-width/height
-        // pin the icon button at its full 30×30 hit target so the toolbar
-        // can never collapse it into a sub-30 squished pill.
-        flexShrink: 0,
-        width,
-        height,
-        minWidth: width,
-        minHeight: height,
-        cursor: 'default',
-        color: disabled ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.92)',
-        zIndex: 2,
-      }}
-      onClick={disabled ? undefined : onClick}
-      onMouseEnter={() => !disabled && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      aria-disabled={disabled || undefined}
-    >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          ...(isCircle
-            ? {
-                top: '50%',
-                left: '50%',
-                width: hoverDiameter,
-                height: hoverDiameter,
-                transform: 'translate(-50%, -50%)',
-                borderRadius: '50%',
-              }
-            : {
-                // Explicit centered width×height (instead of `inset: 0`) so the
-                // hover overlay is structurally pinned to the button's nominal
-                // size — never derived from whatever the outer box turned out
-                // to render at. With the default 30×30 button this is exactly
-                // a 30×30 hover pill.
-                top: '50%',
-                left: '50%',
-                width,
-                height,
-                transform: 'translate(-50%, -50%)',
-                borderRadius: Math.min(width, height) / 2,
-              }),
-          background: showHover ? 'rgba(255,255,255,0.08)' : 'transparent',
-          transition: 'background 140ms ease',
-          pointerEvents: 'none',
-        }}
-      />
-      <div className="relative flex items-center justify-center">{children}</div>
-    </div>
-  )
-}
-
 function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div
@@ -357,16 +104,7 @@ function TitlePlate({ title, subtitle }: { title: string; subtitle?: string }) {
         {title}
       </span>
       {subtitle && (
-        <span
-          style={{
-            fontFamily: FONT_STACK,
-            fontSize: 11,
-            fontWeight: 500,
-            color: 'rgba(255,255,255,0.52)',
-            whiteSpace: 'nowrap',
-            marginTop: 1,
-          }}
-        >
+        <span style={{ ...WINDOW_SUBTITLE_STYLE, whiteSpace: 'nowrap' }}>
           {subtitle}
         </span>
       )}

@@ -85,7 +85,7 @@ export function NotesSidebar({
                   background: isActive
                     ? NOTES_ACCENT
                     : isHovered
-                      ? 'rgba(255,255,255,0.04)'
+                      ? 'rgba(255,255,255,0.08)'
                       : undefined,
                   transition: 'background 0.1s',
                 }}
