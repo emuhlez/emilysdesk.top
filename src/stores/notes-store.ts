@@ -105,7 +105,7 @@ const DEFAULT_NOTES: NoteItem[] = [
     id: makeId(),
     folderId: 'personal',
     title: 'about this site',
-    body: `<h1>about this site</h1><p>Hi! I\u2019m Emily and I built this using Cursor and Claude Code.</p><p></p><p>This is a 1 to 1 reflection of my laptop. I live by director Bong Joon Ho\u2019s favorite quote by Martin Scorsese, \u201CThe most personal is the most creative.\u201D I am a believer that our devices are the most personal, unique things about us and I wanted to share something personal about me with you. Take a peek into my brain and things I\u2019ve built with collaborators.</p><p></p><p>I am so glad that you\u2019re here. Poke around :)</p>`,
+    body: `<h1>about this site</h1><p>Hi! I'm Emily and I built this to be a 1 to 1 reflection of my laptop.</p><p>I live by director Bong Joon Ho\u2019s favorite quote by Martin Scorsese, \u201CThe most personal is the most creative.\u201D I am a believer that our devices are the most personal, unique things about us and I wanted to share something personal about me with you. Take a peek into my brain and things I\u2019ve built with collaborators.</p><p></p><p>I am so glad that you\u2019re here. Poke around :)</p>`,
     createdAt: now - 86400000 * 2,
     updatedAt: now - 86400000 * 2,
   },
