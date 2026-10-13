@@ -1,5 +1,5 @@
 {
-  "name": "emilyhopeiscool",
+  "name": "emilysdesk.top",
   "private": true,
   "version": "0.0.0",
   "main": "dist-electron/main.cjs",
@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "ELECTRON=1 vite",
     "dev:web": "vite",
-    "dev:studio": "npm --prefix studio-shell run dev",
+    "dev:studio": "npm --prefix ../ai-native-studio run dev",
     "dev:all": "concurrently -n host,studio -c blue,magenta \"npm run dev\" \"npm run dev:studio\"",
     "build": "ELECTRON=1 tsc -b && ELECTRON=1 vite build",
     "build:web": "tsc -b && vite build",

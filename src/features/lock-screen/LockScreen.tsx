@@ -4,9 +4,9 @@ import { DISPLAY_FONT_STACK } from '../../styles/typography'
 
 /**
  * macOS-style lock screen. Visually identical to the inline splash in
- * `index.html` (same `/wallpaper.jpg`, same dim overlay, same date/time
- * layout) so the handoff from "instant inline paint" to "React-owned overlay"
- * is invisible to the user.
+ * `index.html` (same `/wallpaper.jpg`, same dim overlay, same date layout,
+ * same Tier 2 Liquid Glass SVG clock filter chain) so the handoff from
+ * "instant inline paint" to "React-owned overlay" is invisible to the user.
  *
  * Click anywhere → calls `onUnlock()`. The fade-out + lift transition is
  * driven by a CSS `transition` triggered by the `exiting` flag we set on
@@ -33,8 +33,8 @@ const WALLPAPER_URL = '/wallpaper.jpg'
 const EXIT_MS = 500
 
 // Fixed SVG canvas for the clock. Wide enough to hold any HH:MM at
-// `fontSize: 160` SF Pro Display Semibold (the widest realistic time
-// "12:38" measures ≈ 400px), tall enough for the `line-height: normal`
+// `fontSize: 160` SF Pro Display Bold (the widest realistic time
+// "12:38" measures ≈ 420px), tall enough for the `line-height: normal`
 // line box (160 × 1.22 ≈ 196px). The visible glyphs are centered inside
 // via `text-anchor="middle"` / `dominantBaseline="central"`, so the
 // container is wider than the glyphs but never wraps or clips them.
@@ -208,7 +208,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
       {/*
         Liquid Glass clock — Apple iOS 26 / macOS Tahoe 26 behavior,
         applied to the Figma `8007:1666` glyph geometry (SF Pro Display
-        Semibold, plus the locked-in `lockscreen-glyph-round` corner
+        Bold, plus the locked-in `lockscreen-glyph-round` corner
         softening that sits between Display and Rounded).
 
         The static Figma vector at `8007:1666` has no effects on it (just
@@ -272,62 +272,63 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
              equivalent of CSS `background-size: cover` +
              `background-position: center`. The result lines up with the
              CSS background the user actually sees behind the clock.
-          2. `feGaussianBlur stdDeviation="5"` — softens the wallpaper
+          2. `feGaussianBlur stdDeviation="3"` — softens the wallpaper
              behind the glass without erasing it (#1 in Apple's recipe).
              Heavy blur (~22px) is correct for *frosted* glass like
              Apple's older sidebars/popovers; for the lock-screen
              clock, which is the see-through Liquid Glass treatment,
-             the blur stays very light so wallpaper colors and shapes
-             remain clearly readable through the digits. ≤2 reads as
-             undistorted (no glass character); ≥10 starts to smear the
-             wallpaper and the "see what's behind" character fades.
-          3. `feColorMatrix type="saturate" 1.6` — vibrancy primitive
+             the blur stays light so wallpaper colors and shapes
+             remain clearly readable through the digits. Progression:
+             22 → 8 → 5 → 2.5 → 3. At 3px the slab has just enough
+             optical thickness to read as glass while wallpaper detail
+             still punches through; ≥10 starts to smear into frost.
+          3. `feColorMatrix type="saturate" 2.0` — vibrancy primitive
              (#2 in Apple's recipe). Keeps tinted wallpapers from going
-             gray when blurred.
-          4. `feColorMatrix * 0.85` — dim multiplier that compensates
+             gray when blurred; bumped so the lens concentrates color
+             the way real Liquid Glass "picks up" surrounding hues.
+          4. `feColorMatrix * 0.95` — dim multiplier that compensates
              for `<feImage>` bypassing the lock-screen's CSS dim overlay
              (`linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.45))`).
              A pure dim-match would be ~0.676 (`(1 − 0.36) × 1.04`); we
-             over-shoot to 0.85 so the wallpaper through the lens reads
-             noticeably brighter than the dim-overlay'd wallpaper
-             around it ("light pickup" lens character). 1.0 would
-             remove the compensation entirely and the patch would
-             glow; 0.72 (the prior value) reads slightly darker than
-             surrounding wallpaper at the current 0.04 wash level.
-          5. `feTurbulence` + `feDisplacementMap` — REFRACTION primitive
-             (#3, the differentiator from frosted glass). Generates
-             low-frequency fractal noise in viewport space and uses it
-             to displace the lightly-blurred wallpaper, producing
-             organic per-pixel "lensing" instead of just smoothing.
-             Scale 6 paired with the 5px blur — scale should track the
-             blur (sharper input → smaller scale, otherwise the
-             displacement looks choppy). baseFrequency 0.014 gives
-             noise features ~70px wide — wide enough that within any
-             single glyph stroke the wallpaper appears coherently bent
-             rather than choppy.
+             over-shoot to 0.95 so the wallpaper through the lens reads
+             brighter than the dim-overlay'd wallpaper around it
+             ("light pickup" / light-concentrating lens character —
+             Apple's "reflects and refracts" description). Progression:
+             0.72 → 0.85 → 0.9 → 0.95. 1.0 would remove compensation
+             and the patch would glow.
+          5. `feTurbulence` + soft blur + `feDisplacementMap` —
+             REFRACTION primitive (#3, the differentiator from frosted
+             glass / the "lensing" Apple calls out). Generates
+             low-frequency fractal noise, softens it
+             (`feGaussianBlur stdDeviation="1.8"`) so displacement stays
+             liquid rather than choppy, then displaces the lightly-
+             blurred wallpaper. Scale 9 with soft noise (~3× the 3px
+             backdrop blur) — visibly bent lensing without frost.
+             baseFrequency 0.01 → ~100px-wide bends that read coherently
+             across Bold glyph strokes. Softening the noise before
+             displacement is the same trick Photos uses in
+             `LiquidGlassDefs` and is what lets scale go this high
+             without looking wavy/noisy.
           6. `feComposite in2="SourceAlpha" operator="in"` — clip the
              refracted wallpaper to the corner-softened glyph alpha
              (SourceAlpha is the alpha output of the inner
              `lockscreen-glyph-round` filter — chained filters compose).
           7. TINT (#5): `feFlood` white + `feComposite in SourceAlpha`
-             at floodOpacity 0.02. Almost entirely clear — only the
-             faintest milky trace remains. The soft top halo carries
-             the silhouette and the trace tint keeps the body from
-             feeling hollow. Range that still works: 0.01–0.06.
-             0 reads as outlined glyphs (no body at all); 0.10+ starts
-             to feel painted again.
+             at floodOpacity 0.025. Trace milky body — just enough
+             substance that the slab reads as a physical glass volume
+             rather than a hollow cutout. Range that still works:
+             0.01–0.06. 0 reads as outlined glyphs; 0.10+ starts to
+             feel painted / frosted again.
           8. SPECULAR top halo (#4, softened): `feOffset` SourceAlpha
-             down by 1.5px, then `feComposite operator="out"` against
-             the original alpha — gives the topmost ~1.5px sliver of
-             every stroke (where stuff above is empty). `feGaussianBlur
-             stdDeviation="1.2"` feathers the sliver into a soft halo,
-             then flood white at opacity 0.55 and clip. The feather
-             matters: a sharp 0.6px blur at high opacity reads as a
-             distinct band floating above the body; a soft 1.2px blur
-             at moderate opacity reads as the body itself catching
-             light at the top edge. The bottom-rim shadow that pairs
-             with this on rect controls is intentionally omitted (see
-             header comment).
+             down by 2px, then `feComposite operator="out"` against
+             the original alpha — gives the topmost ~2px sliver of
+             every stroke. `feGaussianBlur stdDeviation="1.5"` feathers
+             the sliver into a soft halo, then flood white at opacity
+             0.8 and clip. Stronger rim = more "glass catching light"
+             without re-introducing the rejected dual top/bottom rim
+             (stacked-bands artifact on narrow strokes). Blur ≥ dy
+             keeps the halo reading as the body catching light, not
+             as a floating band.
           9. `feMerge` order: refracted bg → wash → top halo. Halo
              must be last so it's not washed out by the tint.
 
@@ -356,7 +357,7 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
             height="110%"
             colorInterpolationFilters="sRGB"
           >
-            <feGaussianBlur in="SourceAlpha" stdDeviation="3.1" result="blur" />
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2.0" result="blur" />
             <feColorMatrix
               in="blur"
               type="matrix"
@@ -386,44 +387,45 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
               preserveAspectRatio="xMidYMid slice"
               result="bg"
             />
-            <feGaussianBlur in="bg" stdDeviation="5" result="bgBlur" />
-            <feColorMatrix in="bgBlur" type="saturate" values="1.6" result="bgSat" />
+            <feGaussianBlur in="bg" stdDeviation="3" result="bgBlur" />
+            <feColorMatrix in="bgBlur" type="saturate" values="2" result="bgSat" />
             <feColorMatrix
               in="bgSat"
               type="matrix"
-              values="0.85 0 0 0 0
-                      0 0.85 0 0 0
-                      0 0 0.85 0 0
+              values="0.95 0 0 0 0
+                      0 0.95 0 0 0
+                      0 0 0.95 0 0
                       0 0 0 1 0"
               result="bgDim"
             />
             <feTurbulence
               type="fractalNoise"
-              baseFrequency="0.014"
+              baseFrequency="0.01"
               numOctaves="2"
               seed="7"
               result="refractNoise"
             />
+            <feGaussianBlur in="refractNoise" stdDeviation="1.8" result="refractNoiseSoft" />
             <feDisplacementMap
               in="bgDim"
-              in2="refractNoise"
-              scale="6"
+              in2="refractNoiseSoft"
+              scale="9"
               xChannelSelector="R"
               yChannelSelector="G"
               result="bgRefracted"
             />
             <feComposite in="bgRefracted" in2="SourceAlpha" operator="in" result="refracted" />
-            <feFlood floodColor="white" floodOpacity="0.02" result="tint" />
+            <feFlood floodColor="white" floodOpacity="0.025" result="tint" />
             <feComposite in="tint" in2="SourceAlpha" operator="in" result="wash" />
-            <feOffset in="SourceAlpha" dx="0" dy="1.5" result="srcShiftDown" />
+            <feOffset in="SourceAlpha" dx="0" dy="2" result="srcShiftDown" />
             <feComposite
               in="SourceAlpha"
               in2="srcShiftDown"
               operator="out"
               result="topEdgeRaw"
             />
-            <feGaussianBlur in="topEdgeRaw" stdDeviation="1.2" result="topEdgeMask" />
-            <feFlood floodColor="white" floodOpacity="0.55" result="topRimColor" />
+            <feGaussianBlur in="topEdgeRaw" stdDeviation="1.5" result="topEdgeMask" />
+            <feFlood floodColor="white" floodOpacity="0.8" result="topRimColor" />
             <feComposite in="topRimColor" in2="topEdgeMask" operator="in" result="topRim" />
             <feMerge>
               <feMergeNode in="refracted" />
@@ -439,8 +441,9 @@ export function LockScreen({ locked, onUnlock }: { locked: boolean; onUnlock: ()
             textAnchor="middle"
             dominantBaseline="central"
             fontFamily={DISPLAY_FONT_STACK}
-            fontWeight={600}
+            fontWeight={700}
             fontSize={160}
+            letterSpacing="-0.05em"
             fill="#ffffff"
             filter="url(#lockscreen-glyph-round)"
           >

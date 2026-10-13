@@ -10,9 +10,9 @@ import sidebarLeftMediumSvg from '../../../../assets/sf-symbols/sidebar.left--mo
  * the two regions (sidebar header vs. content header) can be positioned, styled, and
  * dragged independently.
  *
- * Positioned absolutely at the top-left of the window. When the sidebar is visible,
- * the toggle button hugs the sidebar's inner-right edge; when collapsed, the toggle
- * floats just after the traffic lights as a standalone glass chip.
+ * Positioned absolutely at the top-left of the window. Traffic lights + toggle
+ * sit as a tight cluster (Notes spacing) on the glass — never stretched to the
+ * sidebar's far-right edge.
  */
 
 const TOOLBAR_H = 64
@@ -24,17 +24,13 @@ const TRAFFIC_BLOCK_WIDTH = TRAFFIC_LIGHT_DOT * 3 + TRAFFIC_LIGHT_GAP * 2
 /** X position immediately after the traffic-lights cluster. */
 const TRAFFIC_BLOCK_END = TRAFFIC_LEFT_INSET + TRAFFIC_BLOCK_WIDTH
 
-/** Width of the sidebar-toggle chip (Notes-style 38 × 36 pill — see the
- *  toggle's JSX comment for the visual rationale). Used to (a) right-anchor
- *  the toggle inside the sidebar with SIDEBAR_RIGHT_INSET breathing room
- *  when the sidebar is open, and (b) compute the collapsed-state header
- *  zone width below. Keep in sync with the toggle's `width` prop. */
+/** Width of the sidebar-toggle chip (Notes-style 38 × 36 pill). */
 const TOGGLE_CLUSTER_WIDTH = 38
 const SIDEBAR_LEFT_INSET = 10
-const SIDEBAR_RIGHT_INSET = 2
-/** Static gap between traffic-lights cluster and the toggle chip (and to the
- *  right of the toggle chip) when the sidebar is collapsed. */
-const COLLAPSED_TOGGLE_GAP = 8
+/** Gap between traffic lights and toggle — matches NotesToolbar `marginLeft: 12`. */
+const TOGGLE_GAP = 12
+/** Trailing pad after the toggle when measuring the collapsed chrome zone. */
+const COLLAPSED_TRAILING_GAP = 8
 
 /**
  * Width of the sidebar-header zone (traffic lights + sidebar-toggle chip)
@@ -43,7 +39,7 @@ const COLLAPSED_TOGGLE_GAP = 8
  * right of the toggle chip instead of underneath it.
  */
 export const COLLAPSED_HEADER_ZONE_WIDTH =
-  TRAFFIC_BLOCK_END + COLLAPSED_TOGGLE_GAP + TOGGLE_CLUSTER_WIDTH + COLLAPSED_TOGGLE_GAP
+  TRAFFIC_BLOCK_END + TOGGLE_GAP + TOGGLE_CLUSTER_WIDTH + COLLAPSED_TRAILING_GAP
 
 /* GlassCluster / GlassButton / SingleClusterHoverContext used to live here
  * — local copies of the same primitives in PhotosToolbar — to wrap the
@@ -80,20 +76,8 @@ export function PhotosSidebarHeader({
   detailOpen?: boolean
 }) {
   /**
-   * When the sidebar is visible, anchor the toggle button to the inside-right of the
-   * sidebar so traffic lights + toggle visibly sit *within* the sidebar glass.
-   * When collapsed, the toggle simply floats after the traffic-lights cluster.
-   */
-  const toggleAnchoredLeft =
-    SIDEBAR_LEFT_INSET + sidebarWidth - SIDEBAR_RIGHT_INSET - TOGGLE_CLUSTER_WIDTH
-  const toggleGap = sidebarCollapsed
-    ? COLLAPSED_TOGGLE_GAP
-    : Math.max(COLLAPSED_TOGGLE_GAP, toggleAnchoredLeft - TRAFFIC_BLOCK_END)
-
-  /**
-   * The header zone covers the sidebar's horizontal extent so a click-drag anywhere
-   * over the sidebar's top strip moves the window. When the sidebar is collapsed
-   * we fall back to a tight zone that just wraps the traffic lights + toggle chip.
+   * Header drag zone: full sidebar width when open (click-drag anywhere on the
+   * top glass strip moves the window); tight traffic+toggle cluster when collapsed.
    */
   const zoneWidth = sidebarCollapsed
     ? COLLAPSED_HEADER_ZONE_WIDTH
@@ -141,7 +125,7 @@ export function PhotosSidebarHeader({
 
         <div
           className="pointer-events-auto flex shrink-0 items-center"
-          style={{ marginLeft: toggleGap }}
+          style={{ marginLeft: TOGGLE_GAP }}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {/* Sidebar toggle. Chip styling mirrors NotesToolbar's sidebar

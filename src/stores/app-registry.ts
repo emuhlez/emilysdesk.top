@@ -8,6 +8,7 @@ import photosIconUrl from '../../dock icons/Photos.svg?url'
 import messagesIconUrl from '../../dock icons/Messages.svg?url'
 import trashIconUrl from '../../dock icons/Trash.svg?url'
 import { ArcWindow } from '../features/arc/ArcWindow'
+import { MessagesWindow } from '../features/messages/MessagesWindow'
 import { NotesWindow } from '../features/notes/NotesWindow'
 import { PhotosWindow } from '../features/photos/PhotosWindow'
 import { RobloxStudioWindow } from '../features/roblox-studio/RobloxStudioWindow'
@@ -66,6 +67,7 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
     name: 'Messages',
     menuItems: ['File', 'Edit', 'View', 'Conversation', 'Window', 'Help'],
     iconUrl: messagesIconUrl,
+    windowComponent: MessagesWindow,
   },
   trash: {
     id: 'trash',
@@ -77,15 +79,13 @@ export const APP_REGISTRY: Record<string, AppDefinition> = {
 
 /** Ordered list of app IDs for dock rendering (excluding trash, which is after the divider).
  *
- *  `figma` and `messages` are intentionally hidden until their app surfaces
- *  are built. Their registry entries + icon imports are kept above so
- *  re-enabling is a one-line revert: add `'figma'` between `roblox-studio`
- *  and `notes`, and `'messages'` after `photos`, to restore the original
- *  order. */
+ *  `figma` is intentionally hidden until its app surface is built. Re-enable
+ *  by inserting `'figma'` between `roblox-studio` and `notes`. */
 export const DOCK_ORDER: string[] = [
   'finder',
   'arc',
   'roblox-studio',
   'notes',
   'photos',
+  'messages',
 ]

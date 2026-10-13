@@ -1875,8 +1875,11 @@ export function ArcWindow({
         }}
       >
         <div
-          className="shrink-0 overflow-hidden transition-[margin] duration-300 ease-in-out"
-          style={{ marginLeft: sidebarCollapsed ? -sidebarWidth : 0 }}
+          className="shrink-0 overflow-hidden"
+          style={{
+            marginLeft: sidebarCollapsed ? -sidebarWidth : 0,
+            transition: 'margin 380ms cubic-bezier(0.32, 0.72, 0, 1)',
+          }}
         >
           <Sidebar
             width={sidebarWidth}

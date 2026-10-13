@@ -49,3 +49,15 @@ export const WINDOW_TITLE_STYLE: CSSProperties = {
   letterSpacing: '-0.14px',
   color: 'rgba(255,255,255,0.96)',
 }
+
+/**
+ * Companion line under `WINDOW_TITLE_STYLE` (note count, date range, etc.).
+ * Photos TitlePlate is the precedent: 11 / 500 / 0.52.
+ */
+export const WINDOW_SUBTITLE_STYLE: CSSProperties = {
+  fontFamily: FONT_STACK,
+  fontSize: 11,
+  fontWeight: 500,
+  color: 'rgba(255,255,255,0.52)',
+  marginTop: 1,
+}

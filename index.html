@@ -4,18 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/finder.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>emilyhopeiscool</title>
+    <title>emily's desktop</title>
 
-    <!-- Preload the wallpaper so the lock screen paints before the JS bundle
-         finishes parsing. Same `/wallpaper.jpg` is reused by React's
-         <Wallpaper /> so it stays in the browser cache (one asset, one
-         cache hit, shared by splash + desktop). -->
+    <!-- Preload wallpaper still + Sequoia video. The still is shared by the
+         lock-screen splash, Liquid Glass feImage refraction, and the video
+         poster; the video plays on the unlocked desktop. -->
     <link rel="preload" as="image" href="/wallpaper.jpg" />
+    <link rel="preload" as="video" href="/wallpaper-sequoia.mp4" />
 
     <!-- macOS lock-screen splash. Inlined so the user sees something on the
          very first paint, before main.tsx is even fetched. React's
          createRoot(...).render(<App />) wipes everything inside #root on
-         mount, so no cleanup needed. -->
+         mount, so no cleanup needed.
+
+         The clock (#lock-time) is Tier 2 Liquid Glass — same SVG filter
+         chain as src/features/lock-screen/LockScreen.tsx — so the handoff
+         from splash → React LockScreen stays visually identical. -->
     <style>
       html, body, #root { height: 100%; margin: 0; background: #000; }
       body {
@@ -37,23 +41,16 @@
       }
       .lock__date {
         margin-top: 44px;
-        font-size: 13px;
+        font-size: 25px;
         font-weight: 500;
         letter-spacing: 0.01em;
         opacity: 0.95;
       }
+      /* Fixed SVG canvas matching LockScreen.tsx CLOCK_SVG_W/H. */
       .lock__time {
-        margin-top: -6px;
-        font-size: clamp(96px, 14vw, 168px);
-        font-weight: 600;
-        letter-spacing: -0.04em;
-        line-height: 1;
-        /* "SF Pro Rounded" — Apple's rounded-letterform variant. Falls back
-           to SF Pro Display on non-Apple systems. Same font stack as the
-           React LockScreen so the handoff stays seamless. */
-        font-family: "SF Pro Rounded", "SF Pro Display", "SF Pro",
-          -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial,
-          sans-serif;
+        display: block;
+        margin-top: -36px;
+        overflow: visible;
       }
       @media (prefers-reduced-motion: no-preference) {
         .lock { animation: lock-fadein 200ms ease-out both; }
@@ -67,7 +64,119 @@
     <div id="root">
       <div class="lock" aria-hidden="true">
         <div class="lock__date" id="lock-date"></div>
-        <div class="lock__time" id="lock-time"></div>
+        <!-- Liquid Glass clock (macOS Tahoe 26 / iOS 26). Same 5-primitive
+             recipe as LockScreen.tsx: blur → vibrancy → refraction →
+             soft top specular → tint, clipped to rounded glyph alpha. -->
+        <svg
+          class="lock__time"
+          id="lock-time"
+          width="600"
+          height="220"
+          aria-hidden="true"
+        >
+          <defs>
+            <filter
+              id="splash-glyph-round"
+              x="-5%"
+              y="-5%"
+              width="110%"
+              height="110%"
+              color-interpolation-filters="sRGB"
+            >
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2.0" result="blur" />
+              <feColorMatrix
+                in="blur"
+                type="matrix"
+                values="0 0 0 0 0
+                        0 0 0 0 0
+                        0 0 0 0 0
+                        0 0 0 34 -16"
+                result="rounded"
+              />
+              <feComposite in="SourceGraphic" in2="rounded" operator="in" />
+            </filter>
+            <filter
+              id="splash-liquid-glass"
+              x="0"
+              y="0"
+              width="1920"
+              height="1080"
+              filterUnits="userSpaceOnUse"
+              color-interpolation-filters="sRGB"
+            >
+              <feImage
+                id="splash-bg"
+                href="/wallpaper.jpg"
+                x="0"
+                y="0"
+                width="1920"
+                height="1080"
+                preserveAspectRatio="xMidYMid slice"
+                result="bg"
+              />
+              <feGaussianBlur in="bg" stdDeviation="3" result="bgBlur" />
+              <feColorMatrix in="bgBlur" type="saturate" values="2" result="bgSat" />
+              <feColorMatrix
+                in="bgSat"
+                type="matrix"
+                values="0.95 0 0 0 0
+                        0 0.95 0 0 0
+                        0 0 0.95 0 0
+                        0 0 0 1 0"
+                result="bgDim"
+              />
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.01"
+                numOctaves="2"
+                seed="7"
+                result="refractNoise"
+              />
+              <feGaussianBlur in="refractNoise" stdDeviation="1.8" result="refractNoiseSoft" />
+              <feDisplacementMap
+                in="bgDim"
+                in2="refractNoiseSoft"
+                scale="9"
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="bgRefracted"
+              />
+              <feComposite in="bgRefracted" in2="SourceAlpha" operator="in" result="refracted" />
+              <feFlood flood-color="white" flood-opacity="0.025" result="tint" />
+              <feComposite in="tint" in2="SourceAlpha" operator="in" result="wash" />
+              <feOffset in="SourceAlpha" dx="0" dy="2" result="srcShiftDown" />
+              <feComposite
+                in="SourceAlpha"
+                in2="srcShiftDown"
+                operator="out"
+                result="topEdgeRaw"
+              />
+              <feGaussianBlur in="topEdgeRaw" stdDeviation="1.5" result="topEdgeMask" />
+              <feFlood flood-color="white" flood-opacity="0.8" result="topRimColor" />
+              <feComposite in="topRimColor" in2="topEdgeMask" operator="in" result="topRim" />
+              <feMerge>
+                <feMergeNode in="refracted" />
+                <feMergeNode in="wash" />
+                <feMergeNode in="topRim" />
+              </feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#splash-liquid-glass)">
+            <text
+              id="lock-time-text"
+              x="50%"
+              y="50%"
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-family='"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+              font-weight="700"
+              font-size="160"
+              letter-spacing="-0.05em"
+              fill="#ffffff"
+              filter="url(#splash-glyph-round)"
+            ></text>
+          </g>
+        </svg>
       </div>
       <script>
         (function () {
@@ -80,9 +189,39 @@
           var mm = String(d.getMinutes()).padStart(2, '0');
           var time = h12 + ':' + mm;
           var dEl = document.getElementById('lock-date');
-          var tEl = document.getElementById('lock-time');
+          var tEl = document.getElementById('lock-time-text');
           if (dEl) dEl.textContent = date;
           if (tEl) tEl.textContent = time;
+
+          // Align feImage refraction with the CSS wallpaper (cover + center).
+          // Same math as LockScreen.tsx useViewportRefraction.
+          function updateRefraction() {
+            var svg = document.getElementById('lock-time');
+            var filter = document.getElementById('splash-liquid-glass');
+            var bg = document.getElementById('splash-bg');
+            if (!svg || !filter || !bg) return;
+            var r = svg.getBoundingClientRect();
+            var x = -r.left;
+            var y = -r.top;
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            filter.setAttribute('x', String(x));
+            filter.setAttribute('y', String(y));
+            filter.setAttribute('width', String(w));
+            filter.setAttribute('height', String(h));
+            bg.setAttribute('x', String(x));
+            bg.setAttribute('y', String(y));
+            bg.setAttribute('width', String(w));
+            bg.setAttribute('height', String(h));
+          }
+          updateRefraction();
+          window.addEventListener('resize', updateRefraction);
+          // One more pass after layout settles (fonts / safe-area).
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(function () {
+              requestAnimationFrame(updateRefraction);
+            });
+          }
         })();
       </script>
     </div>

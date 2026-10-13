@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { CSSProperties, PropsWithChildren } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { FONT_STACK, WINDOW_TITLE_STYLE, WINDOW_SUBTITLE_STYLE } from '../../../styles/typography'
+import {
+  GlassCluster,
+  GlassButton,
+  GLASS_PILL_BG,
+  GLASS_PILL_SHADOW,
+  GLASS_PILL_BACKDROP,
+} from '../../../components/liquid-glass/GlassControls'
 import chevronRightSvg from '../../../../assets/sf-symbols/chevron.right--monochrome--medium.svg?raw'
 import minusSvg from '../../../../assets/sf-symbols/minus--monochrome--medium.svg?raw'
 import plusSvg from '../../../../assets/sf-symbols/plus--monochrome--medium.svg?raw'
@@ -37,104 +44,14 @@ const ZOOM_MAX = 3
  * way to keep `left` on the 0.38s curve instead of inheriting the 0.26s default. */
 const LEFT_TRANSITION = { duration: 0.38, ease: [0.32, 0.72, 0, 1] } as const
 
-const FONT = '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif'
-
-/* Liquid-Glass pill recipe lifted from PhotosToolbar's GlassCluster so the
- * detail bar reads as the same control family as the grid toolbar. */
-const GLASS_BG =
-  'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.05) 60%, rgba(255,255,255,0.07) 100%)'
-const GLASS_SHADOW =
-  'inset 0 0.5px 0 rgba(255,255,255,0.45), inset 0 0 0 0.5px rgba(255,255,255,0.10), 0 1px 1px rgba(0,0,0,0.18), 0 6px 14px -8px rgba(0,0,0,0.30)'
-
-function GlassCluster({
-  children,
-  style,
-}: PropsWithChildren<{ style?: CSSProperties }>) {
+function Glyph({ svg, size = 18 }: { svg: string; size?: number }) {
   return (
-    <div
-      onPointerDown={(e) => e.stopPropagation()}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        flexShrink: 0,
-        gap: 1,
-        padding: '5px 8px',
-        borderRadius: 999,
-        background: GLASS_BG,
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        boxShadow: GLASS_SHADOW,
-        isolation: 'isolate',
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function GlassButton({
-  svg,
-  label,
-  onClick,
-  active = false,
-}: {
-  svg: string
-  label: string
-  onClick?: () => void
-  active?: boolean
-}) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <div
-      role="button"
-      aria-label={label}
-      aria-pressed={active || undefined}
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick?.()
-        }
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="flex items-center justify-center focus:outline-none"
-      style={{
-        position: 'relative',
-        flexShrink: 0,
-        width: 30,
-        height: 30,
-        minWidth: 30,
-        minHeight: 30,
-        cursor: 'default',
-        color: active ? '#ff5a55' : 'rgba(255,255,255,0.92)',
-        zIndex: 2,
-      }}
-    >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          width: 30,
-          height: 30,
-          transform: 'translate(-50%, -50%)',
-          borderRadius: 15,
-          background: hovered ? 'rgba(255,255,255,0.12)' : 'transparent',
-          transition: 'background 140ms ease',
-          pointerEvents: 'none',
-        }}
-      />
-      <span
-        aria-hidden
-        className="relative inline-flex shrink-0 [&>svg]:block"
-        style={{ width: 18, height: 18 }}
-        dangerouslySetInnerHTML={{ __html: active ? heartFillSvg : svg }}
-      />
-    </div>
+    <span
+      aria-hidden
+      className="relative inline-flex shrink-0 [&>svg]:block"
+      style={{ width: size, height: size }}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
   )
 }
 
@@ -164,12 +81,13 @@ function ZoomSlider({
   )
 
   return (
-    <GlassCluster style={{ gap: 4, padding: '4px 8px' }}>
+    <GlassCluster edge="none" style={{ gap: 4, padding: '4px 8px' }}>
       <GlassButton
-        svg={minusSvg}
-        label="Zoom out"
+        aria-label="Zoom out"
         onClick={() => onChange(Math.max(ZOOM_MIN, value - step))}
-      />
+      >
+        <Glyph svg={minusSvg} />
+      </GlassButton>
       <div
         ref={trackRef}
         onPointerDown={(e) => {
@@ -224,10 +142,11 @@ function ZoomSlider({
         />
       </div>
       <GlassButton
-        svg={plusSvg}
-        label="Zoom in"
+        aria-label="Zoom in"
         onClick={() => onChange(Math.min(ZOOM_MAX, value + step))}
-      />
+      >
+        <Glyph svg={plusSvg} />
+      </GlassButton>
     </GlassCluster>
   )
 }
@@ -466,10 +385,10 @@ export function PhotoDetail({
                   height: 32,
                   borderRadius: '50%',
                   border: 'none',
-                  background: GLASS_BG,
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  boxShadow: GLASS_SHADOW,
+                  background: GLASS_PILL_BG,
+                  backdropFilter: GLASS_PILL_BACKDROP,
+                  WebkitBackdropFilter: GLASS_PILL_BACKDROP,
+                  boxShadow: GLASS_PILL_SHADOW,
                   color: 'rgba(255,255,255,0.92)',
                   cursor: 'default',
                 }}
@@ -504,28 +423,10 @@ export function PhotoDetail({
               className="pointer-events-none absolute flex flex-col items-center leading-tight"
               style={{ left: '50%', transform: 'translateX(-50%)' }}
             >
-              <span
-                style={{
-                  fontFamily: FONT,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: '-0.14px',
-                  color: 'rgba(255,255,255,0.96)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <span style={{ ...WINDOW_TITLE_STYLE, whiteSpace: 'nowrap' }}>
                 {photo.alt}
               </span>
-              <span
-                style={{
-                  fontFamily: FONT,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: 'rgba(255,255,255,0.52)',
-                  whiteSpace: 'nowrap',
-                  marginTop: 1,
-                }}
-              >
+              <span style={{ ...WINDOW_SUBTITLE_STYLE, whiteSpace: 'nowrap' }}>
                 {meta}
               </span>
             </div>
@@ -536,15 +437,21 @@ export function PhotoDetail({
               style={{ gap: 8 }}
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <GlassCluster style={{ gap: 1 }}>
-                <GlassButton svg={infoCircleSvg} label="Info" />
-                <GlassButton svg={shareSvg} label="Share" />
+              <GlassCluster edge="none" style={{ gap: 1 }}>
+                <GlassButton aria-label="Info">
+                  <Glyph svg={infoCircleSvg} />
+                </GlassButton>
+                <GlassButton aria-label="Share">
+                  <Glyph svg={shareSvg} />
+                </GlassButton>
                 <GlassButton
-                  svg={heartSvg}
-                  label={photo.favorite ? 'Remove favorite' : 'Favorite'}
-                  active={photo.favorite}
+                  aria-label={photo.favorite ? 'Remove favorite' : 'Favorite'}
+                  aria-pressed={photo.favorite}
                   onClick={() => toggleFavorite(photo.id)}
-                />
+                  style={{ color: photo.favorite ? '#ff5a55' : undefined }}
+                >
+                  <Glyph svg={photo.favorite ? heartFillSvg : heartSvg} />
+                </GlassButton>
               </GlassCluster>
 
               <EditButton />
@@ -570,13 +477,13 @@ function EditButton({ onClick }: { onClick?: () => void }) {
         padding: '0 14px',
         borderRadius: 999,
         border: 'none',
-        background: GLASS_BG,
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        boxShadow: GLASS_SHADOW,
+        background: GLASS_PILL_BG,
+        backdropFilter: GLASS_PILL_BACKDROP,
+        WebkitBackdropFilter: GLASS_PILL_BACKDROP,
+        boxShadow: GLASS_PILL_SHADOW,
         color: 'rgba(255,255,255,0.92)',
         cursor: 'default',
-        fontFamily: FONT,
+        fontFamily: FONT_STACK,
         fontSize: 13,
         fontWeight: 500,
         letterSpacing: '-0.08px',
@@ -590,7 +497,7 @@ function EditButton({ onClick }: { onClick?: () => void }) {
           position: 'absolute',
           inset: 0,
           borderRadius: 999,
-          background: hovered ? 'rgba(255,255,255,0.12)' : 'transparent',
+          background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent',
           transition: 'background 140ms ease',
           pointerEvents: 'none',
         }}
@@ -624,10 +531,10 @@ function NavButton({
         height: 40,
         borderRadius: '50%',
         border: 'none',
-        background: GLASS_BG,
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        boxShadow: GLASS_SHADOW,
+        background: GLASS_PILL_BG,
+        backdropFilter: GLASS_PILL_BACKDROP,
+        WebkitBackdropFilter: GLASS_PILL_BACKDROP,
+        boxShadow: GLASS_PILL_SHADOW,
         color: 'rgba(255,255,255,0.92)',
         cursor: 'default',
       }}

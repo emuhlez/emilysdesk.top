@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { FONT_STACK } from '../../../styles/typography'
 
 /* All SF-Symbol SVGs in the project, eagerly loaded as raw strings. Loading
  * via glob (rather than static imports) means the playback bar still builds if
@@ -26,8 +27,6 @@ const PLAY = symbol('play.fill--monochrome--medium.svg')
 const PAUSE = symbol('pause.fill--monochrome--medium.svg')
 const SPEAKER = symbol('speaker.wave.2.fill--monochrome--medium.svg')
 const AIRPLAY = symbol('airplayvideo--monochrome--medium.svg')
-
-const FONT = '"SF Pro", -apple-system, BlinkMacSystemFont, sans-serif'
 
 function fmt(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) sec = 0
@@ -259,7 +258,7 @@ export function VideoControls({ videoEl }: { videoEl: HTMLVideoElement | null })
       <div className="flex items-center" style={{ gap: 12 }}>
         <span
           style={{
-            fontFamily: FONT,
+            fontFamily: FONT_STACK,
             fontSize: 12,
             fontWeight: 500,
             fontVariantNumeric: 'tabular-nums',
@@ -331,7 +330,7 @@ export function VideoControls({ videoEl }: { videoEl: HTMLVideoElement | null })
 
         <span
           style={{
-            fontFamily: FONT,
+            fontFamily: FONT_STACK,
             fontSize: 12,
             fontWeight: 500,
             fontVariantNumeric: 'tabular-nums',

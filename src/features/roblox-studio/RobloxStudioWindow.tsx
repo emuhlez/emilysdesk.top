@@ -4,6 +4,14 @@ import { useAppStore } from '../../stores/app-store'
 import { useMinimizeAnimation } from '../../hooks/useMinimizeAnimation'
 import { useFitWindowToViewport } from '../../hooks/useFitWindowToViewport'
 import { WINDOW_SHADOW } from '../../styles/window-shadow'
+import { WINDOW_TITLE_STYLE } from '../../styles/typography'
+import {
+  MENU_BAR_H,
+  DOCK_H,
+  HANDLE,
+  MOBILE_BREAKPOINT,
+  TITLE_BAR_BG,
+} from '../../constants/window-chrome'
 
 /* ─── resize types ─── */
 
@@ -16,15 +24,11 @@ interface Rect {
   h: number
 }
 
-const MENU_BAR_H = 28
-const DOCK_H = 70
-// studio-shell's editor (toolbar + five dock zones) is dense — anything
+// AI Native Studio's editor (ribbon + dock zones) is dense — anything
 // smaller than ~1024×640 and the inspector / hierarchy panels clip badly.
 const MIN_W = 1024
 const MIN_H = 640
-const HANDLE = 6
 const TITLEBAR_H = 36
-const MOBILE_BREAKPOINT = 640
 
 const CURSORS: Record<Dir, string> = {
   n: 'ns-resize',
@@ -102,37 +106,32 @@ function applyResize(start: Rect, dir: Dir, dx: number, dy: number): Rect {
 
 const ALL_DIRS: Dir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']
 
-/* ─── studio-shell URL ──────────────────────────────────────────────────
+/* ─── AI Native Studio URL ──────────────────────────────────────────────
  *
  *  The Roblox Studio "app" inside this desktop is a live iframe of the
- *  studio-shell subproject that lives in this repo at ./studio-shell/
- *  (imported via `git subtree --squash`; deploys as its own Vercel
- *  project). In dev that means pointing this window at studio-shell's
- *  Vite dev server (port 3000 by default — see
- *  studio-shell/vite.config.ts). Boot both from the repo root with
- *  `npm run dev:all` and every save inside ./studio-shell/ hot-reloads
- *  inside this window with no host rebuild — true live mirror.
+ *  sibling `ai-native-studio` prototype (`~/ai-native-studio`, Vite on
+ *  port 5173). Boot it with `npm run dev:studio` (or `npm run dev:all`)
+ *  so the iframe has something to load — every save in that repo
+ *  hot-reloads inside this window with no host rebuild.
  *
- *  For prod / preview deploys, set VITE_STUDIO_SHELL_URL at build time
- *  to studio-shell's hosted URL (the second Vercel project pointed at
- *  ./studio-shell/). The "mirror forever" behavior in prod comes from
- *  the host iframing that stable URL — redeploy studio-shell and the
- *  in-shell app updates automatically, no host redeploy needed.
- *  Defaults to localhost:3000 so a fresh clone "just works" in dev.
+ *  For prod / preview deploys, set `VITE_STUDIO_URL` at build time to the
+ *  hosted AI Native Studio URL. Falls back to the legacy
+ *  `VITE_STUDIO_SHELL_URL` env name if still set. Default is
+ *  `http://127.0.0.1:5173` (IPv4 — matches ai-native-studio's Vite
+ *  `host: '127.0.0.1'` bind; plain `localhost` can miss on macOS).
  *
- *  Note: this is intentionally a CROSS-ORIGIN iframe (localhost:5180 ↔
- *  localhost:3000 in dev, host-vercel ↔ studio-shell-vercel in prod),
- *  which means:
+ *  Note: this is intentionally a CROSS-ORIGIN iframe (host `:5180` ↔
+ *  studio `:5173` in dev), which means:
  *    - html-to-image can't paint a real minimize thumbnail of its
  *      contents — Desktop.tsx's MinimizedSnapshot already falls back to
- *      the dark placeholder + corner-badge for that case, so this
- *      degrades gracefully instead of breaking.
- *    - studio-shell's heavy global CSS (BuilderSans, `:root` vars,
- *      `body { overflow: hidden }`) stays scoped to its own document
+ *      the dark placeholder + corner-badge for that case.
+ *    - AI Native Studio's global CSS stays scoped to its own document
  *      and can't leak into the macOS chrome — which is exactly why we
- *      iframe instead of vendoring (see system-architect proposal). */
-const STUDIO_SHELL_URL =
-  (import.meta.env.VITE_STUDIO_SHELL_URL as string | undefined) ?? 'http://localhost:3000'
+ *      iframe instead of vendoring. */
+const STUDIO_URL =
+  (import.meta.env.VITE_STUDIO_URL as string | undefined) ??
+  (import.meta.env.VITE_STUDIO_SHELL_URL as string | undefined) ??
+  'http://127.0.0.1:5173'
 
 /* Detect Electron via the preload-exposed flag, same convention ArcWindow
  * uses. In Electron we render <webview> instead of <iframe> — webviews
@@ -306,27 +305,18 @@ export function RobloxStudioWindow({
           boxShadow: fullscreen ? 'none' : WINDOW_SHADOW,
         }}
       >
-        {/* Titlebar — minimal because studio-shell paints its own toolbar
-         *  underneath. We just need a drag handle + traffic lights.
+        {/* Titlebar — minimal because AI Native Studio paints its own
+         *  toolbar underneath. We just need a drag handle + traffic lights.
          *
-         *  Background is one step lighter than the iframe fill (#202227 vs
-         *  #121215) — matches studio-shell's `--bg-surface200` token and the
-         *  macOS Tahoe focused-window chrome color. The 1 px tonal seam
-         *  between the titlebar and studio-shell's own top toolbar is
-         *  intentional: it reads as a real chrome → content boundary the
-         *  same way a native Roblox Studio.app titlebar does, rather than
-         *  the prior "single continuous black surface" treatment.
-         *
-         *  Traffic-light inset = 20 px (pl-5), matching
-         *  PhotosSidebarHeader's `TRAFFIC_LEFT_INSET` and the macOS
-         *  canonical position. Right padding kept tight (pr-3) because
-         *  nothing lives on the right side of this titlebar — the centered
-         *  title is absolutely positioned, not part of the flex flow. */}
+         *  Uses shared `TITLE_BAR_BG` + `WINDOW_TITLE_STYLE` so focused-window
+         *  chrome matches Notes/Photos. Body stays `#121215` (studio
+         *  surface). Traffic-light inset = 20 px (pl-5), matching
+         *  PhotosSidebarHeader. Title is absolutely centered. */}
         <div
           className="relative flex shrink-0 items-center pl-5 pr-3"
           style={{
             height: TITLEBAR_H,
-            background: '#202227',
+            background: TITLE_BAR_BG,
             cursor: 'default',
             touchAction: 'none',
           }}
@@ -340,17 +330,15 @@ export function RobloxStudioWindow({
             onMinimize={handleMinimize}
             onFullscreen={handleFullscreen}
           />
-          {/* Centered window title — pointer-events-none so it doesn't
-           *  steal drags from the titlebar. */}
           <div
-            className="pointer-events-none absolute inset-0 flex items-center justify-center text-[12px] font-medium"
-            style={{ color: 'rgba(255, 255, 255, 0.55)' }}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            style={WINDOW_TITLE_STYLE}
           >
             Roblox Studio
           </div>
         </div>
 
-        {/* Embedded studio-shell — fills the remaining content area.
+        {/* Embedded AI Native Studio — fills the remaining content area.
          *  data-skip-snapshot keeps html-to-image from even trying to
          *  paint the cross-origin iframe during minimize capture (it
          *  would throw SecurityError mid-capture and abort the whole
@@ -364,11 +352,11 @@ export function RobloxStudioWindow({
           {/* Pointer-events shield: while the user is dragging the
            *  window edge / titlebar / a resize handle, swallow pointer
            *  events on the iframe so the drag doesn't get hijacked by
-           *  studio-shell's own pointer handlers (its hierarchy panel,
+           *  the studio's own pointer handlers (hierarchy panel,
            *  viewport, etc. all capture aggressively). */}
           {isElectron ? (
             <webview
-              src={STUDIO_SHELL_URL}
+              src={STUDIO_URL}
               data-skip-snapshot
               style={{
                 position: 'absolute',
@@ -380,7 +368,7 @@ export function RobloxStudioWindow({
             />
           ) : (
             <iframe
-              src={STUDIO_SHELL_URL}
+              src={STUDIO_URL}
               title="Roblox Studio"
               data-skip-snapshot
               allow="clipboard-read; clipboard-write; fullscreen"
@@ -410,14 +398,15 @@ export function RobloxStudioWindow({
         />
       </div>
 
-      {/* Resize handles */}
-      {ALL_DIRS.map((dir) => (
-        <div
-          key={dir}
-          style={{ ...handleStyle(dir), touchAction: 'none' }}
-          onPointerDown={(e) => startDrag(dir, e)}
-        />
-      ))}
+      {/* Resize handles — hidden in fullscreen like Notes/Photos/Arc */}
+      {!fullscreen &&
+        ALL_DIRS.map((dir) => (
+          <div
+            key={dir}
+            style={{ ...handleStyle(dir), touchAction: 'none' }}
+            onPointerDown={(e) => startDrag(dir, e)}
+          />
+        ))}
     </div>
   )
 }
